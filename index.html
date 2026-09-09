@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
+    <!-- Inclusión ordenada de Three.js y dependencias A-Frame/MindAR estables -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- Usamos el Bundle de MindAR Image para Three.js con exportación estricta a UMD -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
 
     <style>
@@ -179,27 +181,23 @@
 
             startBtn.addEventListener('click', async () => {
                 startBtn.disabled = true;
-                startBtn.innerText = "Cargando Cámara...";
+                startBtn.innerText = "Inicializando AR...";
                 await initAR();
             });
 
             const initAR = async () => {
                 try {
-                    // 1. Pedir permisos de cámara explícitamente primero (Fix iOS Safari)
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            facingMode: { exact: "environment" } 
-                        } 
-                    }).catch(async () => {
-                        // Fallback si la cámara trasera exacta falla
-                        return await navigator.mediaDevices.getUserMedia({ video: true });
-                    });
+                    // Verificación de disponibilidad del objeto global MindAR
+                    const MINDAR_LIB = window.MINDAR ? (window.MINDAR.IMAGE || window.MINDAR) : null;
+                    
+                    if (!MINDAR_LIB && typeof window.MINDAR === 'undefined') {
+                        throw new Error("Librería MindAR no cargada en el objeto window.");
+                    }
 
-                    // Detener el stream temporal para dárselo a MindAR
-                    stream.getTracks().forEach(track => track.stop());
+                    // 1. Instanciación con fallback de namespace
+                    const MindARClass = window.MINDAR.IMAGE ? window.MINDAR.IMAGE.MindARThree : window.MindARThree;
 
-                    // 2. Inicializar MindAR
-                    mindarThree = new window.MINDAR.IMAGE.MindARThree({
+                    mindarThree = new MindARClass({
                         container: document.querySelector("#ar-container"),
                         imageTargetSrc: CONFIG.targetMindUrl,
                         uiScanning: 'no',
@@ -212,6 +210,7 @@
                     renderer.toneMapping = THREE.ACESFilmicToneMapping;
                     renderer.toneMappingExposure = 1.2;
 
+                    // Iluminación para barra nocturna
                     const ambientLight = new THREE.AmbientLight(0xfff5ea, 1.2);
                     scene.add(ambientLight);
 
@@ -234,7 +233,7 @@
                         arGroup.add(logoMesh);
                     });
 
-                    // Carga de Modelo 3D
+                    // Carga de Modelo GLB
                     const gltfLoader = new THREE.GLTFLoader();
                     gltfLoader.load(CONFIG.catModelUrl, (gltf) => {
                         const catNode = gltf.scene;
@@ -261,9 +260,9 @@
                         arGroup.scale.set(0, 0, 0);
                     };
 
+                    // Inicialización del motor AR
                     await mindarThree.start();
 
-                    // Ocultar pantalla de inicio
                     startOverlay.style.display = 'none';
 
                     const video = document.querySelector("#ar-container video");
@@ -282,7 +281,7 @@
                 } catch (error) {
                     startBtn.disabled = false;
                     startBtn.innerText = "Reintentar";
-                    alert("Detalle técnico del error: " + error.name + " - " + error.message);
+                    alert("Error de inicialización: " + error.message);
                     console.error("AR Init Error:", error);
                 }
             };
