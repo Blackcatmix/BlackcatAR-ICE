@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- CDNs de Three.js y MindAR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
@@ -22,7 +21,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #000;
         }
 
@@ -35,7 +34,6 @@
             z-index: 1;
         }
 
-        /* Pantalla de inicio para desbloquear permisos de cámara en iOS Safari */
         #start-overlay {
             position: absolute;
             top: 0;
@@ -54,30 +52,31 @@
 
         .start-title {
             color: #ffffff;
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             font-weight: 700;
             letter-spacing: 2px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             text-transform: uppercase;
         }
 
         .start-subtitle {
             color: #888888;
-            font-size: 0.9rem;
-            margin-bottom: 30px;
+            font-size: 0.85rem;
+            margin-bottom: 35px;
+            letter-spacing: 1px;
         }
 
         .btn-start {
             background: #ffffff;
             color: #000000;
             border: none;
-            padding: 16px 36px;
+            padding: 18px 40px;
             font-size: 1rem;
             font-weight: 700;
             text-transform: uppercase;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            box-shadow: 0 0 20px rgba(255,255,255,0.25);
         }
 
         #ui-overlay {
@@ -100,9 +99,9 @@
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 700;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             padding: 10px 20px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -116,11 +115,11 @@
         }
 
         .btn-capture {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             color: #ffffff;
             border: 1.5px solid #ffffff;
             padding: 14px 28px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 700;
             text-transform: uppercase;
             border-radius: 50px;
@@ -135,7 +134,7 @@
             transform: translate(-50%, -50%);
             color: #fff;
             font-size: 0.85rem;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             padding: 12px 24px;
             border-radius: 12px;
             pointer-events: none;
@@ -147,7 +146,6 @@
 </head>
 <body>
 
-    <!-- Pantalla de inicio para compatibilidad con iOS -->
     <div id="start-overlay">
         <div class="start-title">BLACKCAT</div>
         <div class="start-subtitle">BEBIDAS & COCKTAILS</div>
@@ -180,12 +178,27 @@
             const startOverlay = document.getElementById('start-overlay');
 
             startBtn.addEventListener('click', async () => {
-                startOverlay.style.display = 'none';
+                startBtn.disabled = true;
+                startBtn.innerText = "Cargando Cámara...";
                 await initAR();
             });
 
             const initAR = async () => {
                 try {
+                    // 1. Pedir permisos de cámara explícitamente primero (Fix iOS Safari)
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: { exact: "environment" } 
+                        } 
+                    }).catch(async () => {
+                        // Fallback si la cámara trasera exacta falla
+                        return await navigator.mediaDevices.getUserMedia({ video: true });
+                    });
+
+                    // Detener el stream temporal para dárselo a MindAR
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // 2. Inicializar MindAR
                     mindarThree = new window.MINDAR.IMAGE.MindARThree({
                         container: document.querySelector("#ar-container"),
                         imageTargetSrc: CONFIG.targetMindUrl,
@@ -211,7 +224,7 @@
                     arGroup.scale.set(0, 0, 0);
                     anchor.group.add(arGroup);
 
-                    // Carga del Logo
+                    // Carga de Textura Logo
                     const textureLoader = new THREE.TextureLoader();
                     textureLoader.load(CONFIG.logoImageUrl, (texture) => {
                         const logoGeo = new THREE.PlaneGeometry(1.2, 0.6);
@@ -221,7 +234,7 @@
                         arGroup.add(logoMesh);
                     });
 
-                    // Carga del Modelo GLB
+                    // Carga de Modelo 3D
                     const gltfLoader = new THREE.GLTFLoader();
                     gltfLoader.load(CONFIG.catModelUrl, (gltf) => {
                         const catNode = gltf.scene;
@@ -248,8 +261,10 @@
                         arGroup.scale.set(0, 0, 0);
                     };
 
-                    // Inicializar motor AR y forzar atributos de video para iOS Safari
                     await mindarThree.start();
+
+                    // Ocultar pantalla de inicio
+                    startOverlay.style.display = 'none';
 
                     const video = document.querySelector("#ar-container video");
                     if (video) {
@@ -265,12 +280,14 @@
                     });
 
                 } catch (error) {
-                    alert("Error al acceder a la cámara. Asegúrate de dar permisos de cámara en tu navegador.");
+                    startBtn.disabled = false;
+                    startBtn.innerText = "Reintentar";
+                    alert("Detalle técnico del error: " + error.name + " - " + error.message);
                     console.error("AR Init Error:", error);
                 }
             };
 
-            // Capturar pantalla
+            // Captura
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const arCanvas = document.querySelector('#ar-container canvas');
