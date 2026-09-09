@@ -2,10 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- A-Frame + AR.js estables -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
@@ -23,23 +22,18 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: transparent !important;
+            position: fixed;
+            background-color: #000;
         }
 
-        /* Forzar visibilidad del video de la cámara en iOS Safari */
-        #arjs-video {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* Fix para ocupar la pantalla completa en Safari iOS sin franjas */
+        .a-canvas, #arjs-video {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
             object-fit: cover !important;
-            z-index: -2 !important;
-        }
-
-        .a-canvas {
-            z-index: 1 !important;
         }
 
         .a-enter-vr {
@@ -47,7 +41,7 @@
         }
 
         #ui-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
@@ -95,7 +89,7 @@
         }
 
         #scanning-overlay {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -115,13 +109,12 @@
 
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-        <div id="scanning-overlay">Apunta la cámara al marcador Hiro...</div>
+        <div id="scanning-overlay">Apunta la cámara al marcador...</div>
         <div class="controls-container">
             <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
         </div>
     </div>
 
-    <!-- Escena AR con forzado de transparencia -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
@@ -133,13 +126,13 @@
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación -->
         <a-light type="ambient" color="#fff5ea" intensity="1.2"></a-light>
         <a-light type="directional" color="#ffffff" intensity="2.0" position="2 4 2"></a-light>
 
-        <!-- Marcador Hiro (Para probar visión artificial al instante) -->
         <a-marker preset="hiro" id="marker">
+            <!-- Logo Blackcat detrás -->
             <a-plane src="#logoImg" position="0 0.8 -0.3" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
+            <!-- Gato 3D flotando -->
             <a-gltf-model src="#catModel" position="0 0.1 0" scale="0.1 0.1 0.1"></a-gltf-model>
         </a-marker>
 
