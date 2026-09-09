@@ -26,7 +26,6 @@
             background-color: #000;
         }
 
-        /* Fix para forzar Fullscreen de cámara en iOS Safari */
         video, canvas {
             position: fixed !important;
             top: 0 !important;
@@ -110,7 +109,7 @@
 
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-        <div id="scanning-overlay">Apunta la cámara al marcador Hiro...</div>
+        <div id="scanning-overlay">Apunta la cámara al marcador...</div>
         <div class="controls-container">
             <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
         </div>
@@ -131,11 +130,14 @@
         <a-light type="directional" color="#ffffff" intensity="2.5" position="2 4 2"></a-light>
 
         <a-marker preset="hiro" id="marker">
-            <!-- Logo Blackcat justo encima del marcador -->
+            <!-- Logo Blackcat -->
             <a-plane src="#logoImg" position="0 0.8 -0.2" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
             
-            <!-- Modelo 3D del Gato ajustado a escala 1:1 -->
-            <a-gltf-model src="#catModel" position="0 0 0" scale="0.8 0.8 0.8"></a-gltf-model>
+            <!-- Modelo 3D con varias micro-escalas de prueba por si era un problema de tamaño -->
+            <a-gltf-model src="#catModel" position="0 0.1 0" scale="0.01 0.01 0.01"></a-gltf-model>
+
+            <!-- Cubo de prueba 3D en caso de que el .glb falle -->
+            <a-box position="0 0.2 0" scale="0.4 0.4 0.4" color="#111111" material="roughness: 0.2; metalness: 0.8" animation="property: rotation; to: 0 360 0; loop: true; dur: 4000"></a-box>
         </a-marker>
 
         <a-entity camera></a-entity>
