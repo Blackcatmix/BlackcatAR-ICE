@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- Importación de A-Frame y AR.js (Rendimiento ultra ligero y 100% estable en iOS) -->
+    <!-- A-Frame + AR.js estables -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
@@ -17,12 +17,29 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
-        body, html {
+        html, body {
             width: 100%;
             height: 100%;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #000;
+            background-color: transparent !important;
+        }
+
+        /* Forzar visibilidad del video de la cámara en iOS Safari */
+        #arjs-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
+            z-index: -2 !important;
+        }
+
+        .a-canvas {
+            z-index: 1 !important;
         }
 
         .a-enter-vr {
@@ -98,16 +115,17 @@
 
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-        <div id="scanning-overlay">Apunta la cámara al marcador...</div>
+        <div id="scanning-overlay">Apunta la cámara al marcador Hiro...</div>
         <div class="controls-container">
             <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
         </div>
     </div>
 
-    <!-- Escena WebAR Ultra Liviana -->
+    <!-- Escena AR con forzado de transparencia -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
+        renderer="logarithmicDepthBuffer: true; alpha: true;"
         vr-mode-ui="enabled: false">
 
         <a-assets>
@@ -115,16 +133,13 @@
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación cálida de bar -->
+        <!-- Iluminación -->
         <a-light type="ambient" color="#fff5ea" intensity="1.2"></a-light>
         <a-light type="directional" color="#ffffff" intensity="2.0" position="2 4 2"></a-light>
 
-        <!-- Marcador Pattern de Pruebas -->
+        <!-- Marcador Hiro (Para probar visión artificial al instante) -->
         <a-marker preset="hiro" id="marker">
-            <!-- Logo 3D vertical de fondo -->
             <a-plane src="#logoImg" position="0 0.8 -0.3" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
-            
-            <!-- Modelo 3D del Gato -->
             <a-gltf-model src="#catModel" position="0 0.1 0" scale="0.1 0.1 0.1"></a-gltf-model>
         </a-marker>
 
@@ -144,7 +159,6 @@
                 scanOverlay.style.opacity = '1';
             });
 
-            // Capturar pantalla
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
