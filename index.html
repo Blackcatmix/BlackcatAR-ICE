@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- Librerías estables para iOS y Android (A-Frame + MindAR) -->
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <!-- Importación de A-Frame y AR.js (Rendimiento ultra ligero y 100% estable en iOS) -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
     <style>
         * {
@@ -21,11 +21,10 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #000;
         }
 
-        /* Ocultar elementos sobrantes */
         .a-enter-vr {
             display: none !important;
         }
@@ -99,46 +98,49 @@
 
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-        <div id="scanning-overlay">Apunta la cámara al hielo o vaso...</div>
+        <div id="scanning-overlay">Apunta la cámara al marcador...</div>
         <div class="controls-container">
             <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
         </div>
     </div>
 
-    <!-- Escena AR nativa para WebAR -->
-   <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/examples/image-tracking/assets/card-example/card.mind; autoStart: true; uiScanning: #scanning-overlay;"
+    <!-- Escena WebAR Ultra Liviana -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
+        vr-mode-ui="enabled: false">
 
         <a-assets>
             <a-asset-item id="catModel" src="./cat_model.glb"></a-asset-item>
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <!-- Iluminación ambiente de bar -->
+        <!-- Iluminación cálida de bar -->
         <a-light type="ambient" color="#fff5ea" intensity="1.2"></a-light>
         <a-light type="directional" color="#ffffff" intensity="2.0" position="2 4 2"></a-light>
 
-        <!-- Anchor del Target -->
-        <a-entity mindar-image-target="targetIndex: 0">
+        <!-- Marcador Pattern de Pruebas -->
+        <a-marker preset="hiro" id="marker">
             <!-- Logo 3D vertical de fondo -->
             <a-plane src="#logoImg" position="0 0.8 -0.3" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
             
             <!-- Modelo 3D del Gato -->
-            <a-gltf-model src="#catModel" position="0 0.1 0" scale="0.1 0.1 0.1" animation-mixer></a-gltf-model>
-        </a-entity>
+            <a-gltf-model src="#catModel" position="0 0.1 0" scale="0.1 0.1 0.1"></a-gltf-model>
+        </a-marker>
+
+        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const sceneEl = document.querySelector('a-scene');
+            const marker = document.getElementById('marker');
             const scanOverlay = document.getElementById('scanning-overlay');
 
-            sceneEl.addEventListener("targetFound", () => {
+            marker.addEventListener("markerFound", () => {
                 scanOverlay.style.opacity = '0';
             });
 
-            sceneEl.addEventListener("targetLost", () => {
+            marker.addEventListener("markerLost", () => {
                 scanOverlay.style.opacity = '1';
             });
 
