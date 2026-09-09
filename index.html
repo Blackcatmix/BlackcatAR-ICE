@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Blackcat WebAR Experience - 3TECHLAB</title>
+
+    <!-- CDNs de Three.js y MindAR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000;
+        }
+
+        #ar-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .brand-header {
+            color: #ffffff;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.65);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            margin-top: 10px;
+        }
+
+        .controls-container {
+            pointer-events: auto;
+            margin-bottom: 25px;
+        }
+
+        .btn-capture {
+            background: linear-gradient(135deg, #111111, #333333);
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            padding: 14px 28px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-capture:active {
+            transform: scale(0.95);
+            background: #ffffff;
+            color: #000000;
+        }
+
+        #scanning-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.75);
+            padding: 12px 24px;
+            border-radius: 12px;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            z-index: 5;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ar-container"></div>
+
+    <div id="ui-overlay">
+        <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
+        <div id="scanning-overlay">Apunta la cámara al hielo o vaso...</div>
+        <div class="controls-container">
+            <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Configuración de rutas locales dentro de tu repositorio en GitHub Pages
+            const CONFIG = {
+                targetMindUrl: './targets.mind',
+                catModelUrl: './cat_model.glb',
+                logoImageUrl: './blackcat_logo.png'
+            };
+
+            let mindarThree = null;
+            let mixer = null;
+            let catNode = null;
+            let clock = new THREE.Clock();
+
+            const initAR = async () => {
+                mindarThree = new window.MINDAR.IMAGE.MindARThree({
+                    container: document.querySelector("#ar-container"),
+                    imageTargetSrc: CONFIG.targetMindUrl,
+                    uiScanning: 'no',
+                    filterMinCF: 0.0001,
+                    filterBeta: 0.001
+                });
+
+                const { renderer, scene, camera } = mindarThree;
+
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.2;
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                // Iluminación simulando barra nocturna
+                const ambientLight = new THREE.AmbientLight(0xfff5ea, 1.2);
+                scene.add(ambientLight);
+
+                const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+                dirLight.position.set(2, 4, 2);
+                dirLight.castShadow = true;
+                scene.add(dirLight);
+
+                const rimLight = new THREE.DirectionalLight(0x7b2cbf, 1.5);
+                rimLight.position.set(-2, 2, -2);
+                scene.add(rimLight);
+
+                const anchor = mindarThree.addAnchor(0);
+                const arGroup = new THREE.Group();
+                arGroup.scale.set(0, 0, 0);
+                anchor.group.add(arGroup);
+
+                // Plano con el Logo Blackcat de fondo
+                const textureLoader = new THREE.TextureLoader();
+                textureLoader.load(
+                    CONFIG.logoImageUrl, 
+                    (texture) => {
+                        const logoGeo = new THREE.PlaneGeometry(1.2, 0.6);
+                        const logoMat = new THREE.MeshBasicMaterial({ 
+                            map: texture, 
+                            transparent: true,
+                            side: THREE.DoubleSide 
+                        });
+                        const logoMesh = new THREE.Mesh(logoGeo, logoMat);
+                        logoMesh.position.set(0, 0.8, -0.3);
+                        arGroup.add(logoMesh);
+                    },
+                    undefined,
+                    (err) => console.warn('Textura de logo no encontrada, omitiendo plano vertical.')
+                );
+
+                // Carga del modelo GLTF/GLB del Gato
+                const gltfLoader = new THREE.GLTFLoader();
+                gltfLoader.load(
+                    CONFIG.catModelUrl, 
+                    (gltf) => {
+                        catNode = gltf.scene;
+                        catNode.scale.set(0.1, 0.1, 0.1); // Escalado base (Ajustar según dimensiones del .glb)
+                        catNode.position.set(0, 0.1, 0); 
+
+                        catNode.traverse((node) => {
+                            if (node.isMesh) {
+                                node.castShadow = true;
+                                node.receiveShadow = true;
+                            }
+                        });
+
+                        if (gltf.animations && gltf.animations.length > 0) {
+                            mixer = new THREE.AnimationMixer(catNode);
+                            gltf.animations.forEach((clip) => {
+                                const action = mixer.clipAction(clip);
+                                action.play();
+                            });
+                        }
+
+                        arGroup.add(catNode);
+                    },
+                    undefined,
+                    (err) => console.error('Error cargando cat_model.glb:', err)
+                );
+
+                const scanOverlay = document.getElementById('scanning-overlay');
+
+                anchor.onTargetFound = () => {
+                    scanOverlay.style.opacity = '0';
+                    let scaleVal = 0;
+                    const fadeIn = setInterval(() => {
+                        scaleVal += 0.08;
+                        if (scaleVal >= 1) {
+                            scaleVal = 1;
+                            clearInterval(fadeIn);
+                        }
+                        arGroup.scale.set(scaleVal, scaleVal, scaleVal);
+                    }, 16);
+                };
+
+                anchor.onTargetLost = () => {
+                    scanOverlay.style.opacity = '1';
+                    arGroup.scale.set(0, 0, 0);
+                };
+
+                await mindarThree.start();
+                
+                renderer.setAnimationLoop(() => {
+                    const delta = clock.getDelta();
+                    if (mixer) mixer.update(delta);
+                    renderer.render(scene, camera);
+                });
+            };
+
+            // Captura combinada (Cámara + Canvas 3D)
+            document.getElementById('capture-btn').addEventListener('click', () => {
+                const video = document.querySelector('video');
+                const arCanvas = document.querySelector('#ar-container canvas');
+
+                if (!video || !arCanvas) return;
+
+                const mergedCanvas = document.createElement('canvas');
+                mergedCanvas.width = arCanvas.width;
+                mergedCanvas.height = arCanvas.height;
+                const ctx = mergedCanvas.getContext('2d');
+
+                ctx.drawImage(video, 0, 0, mergedCanvas.width, mergedCanvas.height);
+                ctx.drawImage(arCanvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
+
+                const dataURL = mergedCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `Blackcat_AR_Moment_${Date.now()}.png`;
+                link.href = dataURL;
+                link.click();
+            });
+
+            initAR();
+        });
+    </script>
+</body>
+</html>
