@@ -7,6 +7,7 @@
 
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
     <style>
         * {
@@ -123,45 +124,35 @@
         vr-mode-ui="enabled: false">
 
         <a-assets>
+            <a-asset-item id="catModel" src="./cat_model.glb"></a-asset-item>
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación cálida para la barra -->
-        <a-light type="ambient" color="#ffffff" intensity="1.8"></a-light>
-        <a-light type="directional" color="#ffb703" intensity="2.5" position="2 4 2"></a-light>
+        <!-- Iluminación de escenario reforzada -->
+        <a-light type="ambient" color="#ffffff" intensity="2.2"></a-light>
+        <a-light type="directional" color="#ffaa00" intensity="2.8" position="2 4 2"></a-light>
 
         <a-marker preset="hiro" id="marker">
             
-            <!-- Logo Blackcat al fondo -->
-            <a-plane src="#logoImg" position="0 1.2 -0.2" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
+            <!-- Logo Blackcat Agrandado al doble de tamaño -->
+            <a-plane 
+                src="#logoImg" 
+                position="0 1.8 -0.5" 
+                height="1.2" 
+                width="2.4" 
+                material="transparent: true; side: double">
+            </a-plane>
 
-            <!-- GATO NEGRO 3D RENDERIZADO EN TIEMPO REAL -->
-            <a-entity position="0 0.1 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 9000; easing: linear">
-                <!-- Cuerpo estilizado -->
-                <a-cone position="0 0.3 0" radius-bottom="0.22" radius-top="0.08" height="0.55" color="#111111" material="roughness: 0.2; metalness: 0.8"></a-cone>
-                
-                <!-- Cabeza -->
-                <a-sphere position="0 0.62 0" radius="0.18" color="#111111" material="roughness: 0.2; metalness: 0.8"></a-sphere>
-
-                <!-- Oreja Izquierda -->
-                <a-cone position="-0.09 0.8 0" radius-bottom="0.05" radius-top="0.001" height="0.14" rotation="0 0 12" color="#111111"></a-cone>
-
-                <!-- Oreja Derecha -->
-                <a-cone position="0.09 0.8 0" radius-bottom="0.05" radius-top="0.001" height="0.14" rotation="0 0 -12" color="#111111"></a-cone>
-
-                <!-- Ojos Dorados Blackcat -->
-                <a-sphere position="-0.06 0.65 0.14" radius="0.035" color="#ffaa00" material="emissive: #ffaa00; emissiveIntensity: 0.6"></a-sphere>
-                <a-sphere position="0.06 0.65 0.14" radius="0.035" color="#ffaa00" material="emissive: #ffaa00; emissiveIntensity: 0.6"></a-sphere>
-
-                <!-- Pupilas -->
-                <a-sphere position="-0.06 0.65 0.17" radius="0.015" color="#000000"></a-sphere>
-                <a-sphere position="0.06 0.65 0.17" radius="0.015" color="#000000"></a-sphere>
-
-                <!-- Hocico/Nariz -->
-                <a-sphere position="0 0.6 0.16" radius="0.02" color="#ffffff"></a-sphere>
-
-                <!-- Cola elegante -->
-                <a-cylinder position="0 0.2 -0.2" radius="0.02" height="0.45" rotation="35 0 0" color="#111111"></a-cylinder>
+            <!-- Contenedor del Gato Agrandado (Escala aumentada a 0.5) -->
+            <a-entity id="catContainer" position="0 -1.2 0">
+                <a-gltf-model 
+                    id="catEntity"
+                    src="#catModel" 
+                    position="0 0 0" 
+                    scale="0.5 0.5 0.5"
+                    rotation="0 0 0"
+                    animation-mixer>
+                </a-gltf-model>
             </a-entity>
 
         </a-marker>
