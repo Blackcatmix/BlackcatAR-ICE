@@ -3,62 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Blackcat WebAR - 3TECHLAB</title>
+    <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- CDN Estables A-Frame y AR.js -->
+    <!-- CDNs Estables de A-Frame y AR.js para WebAR cross-platform (iOS Safari / Android Chrome) -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; position: fixed; background-color: #000; font-family: sans-serif; }
-        
-        video, canvas {
-            position: fixed !important; top: 0 !important; left: 0 !important;
-            width: 100vw !important; height: 100vh !important; object-fit: cover !important;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            position: fixed !important;
+            background-color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
+        /* Fullscreen responsive fix para el viewport de iOS Safari */
+        video, canvas {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
+            margin: 0 !important;
+        }
+
+        .a-enter-vr {
+            display: none !important;
+        }
+
+        /* Consola Debug de Estado para 3TECHLAB */
         #debug-console {
-            position: fixed; top: 10px; left: 10px; right: 10px;
-            background: rgba(0,0,0,0.85); color: #00ff66; font-family: monospace;
-            font-size: 0.75rem; padding: 10px; border-radius: 8px; z-index: 99;
-            border: 1px solid rgba(0,255,102,0.3); pointer-events: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #00ff66;
+            font-family: monospace;
+            font-size: 0.75rem;
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 99;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            pointer-events: none;
         }
 
         #ui-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 10; pointer-events: none; display: flex;
-            flex-direction: column; justify-content: space-between; align-items: center; padding: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
         }
 
         .brand-header {
-            color: #fff; text-transform: uppercase; letter-spacing: 2px;
-            font-size: 0.8rem; font-weight: 700; background: rgba(0,0,0,0.7);
-            padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+            color: #ffffff;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
             margin-top: 50px;
         }
 
+        .controls-container {
+            pointer-events: auto;
+            margin-bottom: 25px;
+        }
+
         .btn-capture {
-            background: #fff; color: #000; border: none; padding: 14px 28px;
-            font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
-            border-radius: 50px; cursor: pointer; pointer-events: auto;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 14px 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
     </style>
 </head>
 <body>
 
-    <!-- Consola de Diagnóstico 3TECHLAB -->
-    <div id="debug-console">Estado: Inicializando motor 3D...</div>
+    <!-- Panel verde de diagnóstico de la GPU / Asset Pipeline -->
+    <div id="debug-console">[3TECHLAB Debug]: Inicializando WebGL...</div>
 
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-        <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
+        <div class="controls-container">
+            <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
+        </div>
     </div>
 
+    <!-- Escena AR WebGL -->
     <a-scene 
         embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false;"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
         renderer="logarithmicDepthBuffer: true; alpha: true; colorManagement: true;"
         vr-mode-ui="enabled: false">
 
@@ -67,25 +134,30 @@
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación cálida para la barra -->
-        <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
+        <!-- Iluminación cálida estilo ambiente nocturno de bar -->
+        <a-light type="ambient" color="#ffffff" intensity="1.8"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- Marcador Hiro -->
+        <!-- Anclaje al Marcador Hiro -->
         <a-marker preset="hiro" id="marker">
             
-            <!-- Logo Blackcat -->
-            <a-plane src="#logoImg" position="0 1.0 -0.5" height="0.5" width="1.0" material="transparent: true; side: double"></a-plane>
+            <!-- Logo Blackcat vertical en el plano trasero -->
+            <a-plane src="#logoImg" position="0 0.8 -0.3" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
 
-            <!-- Modelo 3D con Escala Corregida y Manejador de Eventos -->
-            <a-gltf-model 
-                id="gato-3d"
-                src="#catModel" 
-                position="0 0 0" 
-                scale="0.003 0.003 0.003"
-                rotation="0 0 0"
-                animation-mixer>
-            </a-gltf-model>
+            <!-- Entidad Contenedora: Ajuste de pivote y micro-escala para el gato -->
+            <a-entity position="0 0 0">
+                <a-gltf-model 
+                    id="gato-3d"
+                    src="#catModel" 
+                    position="0 0.1 0" 
+                    scale="0.003 0.003 0.003"
+                    rotation="0 0 0"
+                    animation-mixer>
+                </a-gltf-model>
+            </a-entity>
+
+            <!-- Luz puntual enfocada directamente sobre el pelaje del gato -->
+            <a-light type="point" color="#ffaa00" intensity="3" distance="5" position="0 1 1"></a-light>
 
         </a-marker>
 
@@ -101,14 +173,14 @@
             const catEntity = document.getElementById('gato-3d');
             const marker = document.getElementById('marker');
 
-            // Diagnóstico de carga del asset GLB
+            // Listeners de diagnóstico de carga del buffer 3D
             catEntity.addEventListener('model-loaded', () => {
-                debug("✅ ¡Gato 3D cargado con éxito! Apuntá al Hiro.");
+                debug("✅ ¡Modelo cat_model.glb cargado con éxito! Apuntá al Hiro.");
             });
 
             catEntity.addEventListener('model-error', (e) => {
-                debug("❌ Error al cargar cat_model.glb. Verificá la ruta en GitHub.");
-                console.error("Model Error Details:", e);
+                debug("❌ Error al descargar/parsear cat_model.glb. Verificá la ruta.");
+                console.error("Model Error:", e);
             });
 
             marker.addEventListener("markerFound", () => {
@@ -119,10 +191,11 @@
                 debug("🔍 Buscando Marcador Hiro...");
             });
 
-            // Captura de pantalla
+            // Captura de pantalla combinada (Video + Canvas WebGL)
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
+
                 if (!video || !canvas) return;
 
                 const mergedCanvas = document.createElement('canvas');
