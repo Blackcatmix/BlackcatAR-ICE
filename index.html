@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- CDNs Estables de A-Frame y AR.js para WebAR cross-platform (iOS Safari / Android Chrome) -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
@@ -26,10 +25,8 @@
             overflow: hidden !important;
             position: fixed !important;
             background-color: #000;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
-        /* Fullscreen responsive fix para el viewport de iOS Safari */
         video, canvas {
             position: fixed !important;
             top: 0 !important;
@@ -44,21 +41,21 @@
             display: none !important;
         }
 
-        /* Consola Debug de Estado para 3TECHLAB */
-        #debug-console {
+        #debug-status {
             position: fixed;
             top: 10px;
-            left: 10px;
-            right: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.85);
             color: #00ff66;
             font-family: monospace;
             font-size: 0.75rem;
-            padding: 10px;
+            padding: 6px 14px;
             border-radius: 8px;
-            z-index: 99;
             border: 1px solid rgba(0, 255, 102, 0.3);
+            z-index: 99;
             pointer-events: none;
+            text-align: center;
         }
 
         #ui-overlay {
@@ -81,14 +78,14 @@
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 700;
             background: rgba(0, 0, 0, 0.75);
             padding: 10px 20px;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(8px);
-            margin-top: 50px;
+            margin-top: 45px;
         }
 
         .controls-container {
@@ -97,36 +94,51 @@
         }
 
         .btn-capture {
-            background: #ffffff;
-            color: #000000;
-            border: none;
-            padding: 14px 30px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffffff;
+            border: 1.5px solid #ffffff;
+            padding: 14px 28px;
             font-size: 0.85rem;
             font-weight: 700;
             text-transform: uppercase;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        #scanning-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.85);
+            padding: 12px 24px;
+            border-radius: 12px;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            z-index: 5;
+            border: 1px solid rgba(255,255,255,0.15);
         }
     </style>
 </head>
 <body>
 
-    <!-- Panel verde de diagnóstico de la GPU / Asset Pipeline -->
-    <div id="debug-console">[3TECHLAB Debug]: Inicializando WebGL...</div>
+    <div id="debug-status">[3TECHLAB]: Cargando modelo 3D...</div>
 
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
+        <div id="scanning-overlay">Apunta la cámara al marcador Hiro...</div>
         <div class="controls-container">
             <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
         </div>
     </div>
 
-    <!-- Escena AR WebGL -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
-        renderer="logarithmicDepthBuffer: true; alpha: true; colorManagement: true;"
+        renderer="logarithmicDepthBuffer: true; alpha: true;"
         vr-mode-ui="enabled: false">
 
         <a-assets>
@@ -134,30 +146,26 @@
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación cálida estilo ambiente nocturno de bar -->
-        <a-light type="ambient" color="#ffffff" intensity="1.8"></a-light>
+        <!-- Iluminación para resaltar pelaje negro -->
+        <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- Anclaje al Marcador Hiro -->
         <a-marker preset="hiro" id="marker">
             
-            <!-- Logo Blackcat vertical en el plano trasero -->
+            <!-- Logo Blackcat -->
             <a-plane src="#logoImg" position="0 0.8 -0.3" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
 
-            <!-- Entidad Contenedora: Ajuste de pivote y micro-escala para el gato -->
-            <a-entity position="0 0 0">
+            <!-- Contenedor del Gato con Offset Y Compensado -->
+            <a-entity id="catContainer" position="0 -0.5 0">
                 <a-gltf-model 
-                    id="gato-3d"
+                    id="catEntity"
                     src="#catModel" 
-                    position="0 0.1 0" 
-                    scale="0.003 0.003 0.003"
+                    position="0 0 0" 
+                    scale="0.08 0.08 0.08"
                     rotation="0 0 0"
                     animation-mixer>
                 </a-gltf-model>
             </a-entity>
-
-            <!-- Luz puntual enfocada directamente sobre el pelaje del gato -->
-            <a-light type="point" color="#ffaa00" intensity="3" distance="5" position="0 1 1"></a-light>
 
         </a-marker>
 
@@ -165,33 +173,31 @@
     </a-scene>
 
     <script>
-        const debug = (msg) => {
-            document.getElementById('debug-console').innerText = `[3TECHLAB Debug]: ${msg}`;
-        };
-
         document.addEventListener("DOMContentLoaded", () => {
-            const catEntity = document.getElementById('gato-3d');
             const marker = document.getElementById('marker');
+            const scanOverlay = document.getElementById('scanning-overlay');
+            const debugStatus = document.getElementById('debug-status');
+            const catEntity = document.getElementById('catEntity');
 
-            // Listeners de diagnóstico de carga del buffer 3D
+            // Detectar si el modelo .glb se descargó correctamente
             catEntity.addEventListener('model-loaded', () => {
-                debug("✅ ¡Modelo cat_model.glb cargado con éxito! Apuntá al Hiro.");
+                debugStatus.innerText = "[3TECHLAB]: ✅ Modelo 'cat_model.glb' cargado OK";
+                debugStatus.style.color = "#00ff66";
             });
 
             catEntity.addEventListener('model-error', (e) => {
-                debug("❌ Error al descargar/parsear cat_model.glb. Verificá la ruta.");
-                console.error("Model Error:", e);
+                debugStatus.innerText = "[3TECHLAB]: ❌ Error al descargar 'cat_model.glb' (Verifica el nombre en GitHub)";
+                debugStatus.style.color = "#ff3333";
             });
 
             marker.addEventListener("markerFound", () => {
-                debug("🎯 Marcador Hiro Detectado.");
+                scanOverlay.style.opacity = '0';
             });
 
             marker.addEventListener("markerLost", () => {
-                debug("🔍 Buscando Marcador Hiro...");
+                scanOverlay.style.opacity = '1';
             });
 
-            // Captura de pantalla combinada (Video + Canvas WebGL)
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
