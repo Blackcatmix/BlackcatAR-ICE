@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- Librerías A-Frame + AR.js + Extras de Animación -->
+    <!-- CDNs estables de A-Frame y AR.js -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
@@ -28,7 +28,6 @@
             background-color: #000;
         }
 
-        /* Fix responsive cámara en pantalla completa para iOS Safari */
         video, canvas {
             position: fixed !important;
             top: 0 !important;
@@ -130,25 +129,29 @@
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Configuración de iluminación para barra nocturna -->
-        <a-light type="ambient" color="#ffffff" intensity="1.8"></a-light>
-        <a-light type="directional" color="#ffaa00" intensity="1.5" position="2 4 2"></a-light>
-        <a-light type="directional" color="#00d2ff" intensity="1.0" position="-2 2 -2"></a-light>
+        <!-- Iluminación -->
+        <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
+        <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
         <!-- Anclaje al Marcador Hiro -->
         <a-marker preset="hiro" id="marker">
             
-            <!-- Logo Blackcat detrás -->
-            <a-plane src="#logoImg" position="0 0.8 -0.3" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
+            <!-- Logo Blackcat de fondo -->
+            <a-plane src="#logoImg" position="0 1.2 -0.5" height="0.6" width="1.2" material="transparent: true; side: double"></a-plane>
 
-            <!-- Modelo 3D del Gato Negro con animación activa y escala ajustada -->
-            <a-gltf-model 
-                src="#catModel" 
-                position="0 0 0" 
-                scale="0.0025 0.0025 0.0025"
-                rotation="0 0 0"
-                animation-mixer>
-            </a-gltf-model>
+            <!-- Contenedor compensador de origen y escala para black_cat.glb -->
+            <a-entity position="0 0 0">
+                <a-gltf-model 
+                    src="#catModel" 
+                    position="0 0.2 0" 
+                    scale="0.008 0.008 0.008"
+                    rotation="0 0 0"
+                    animation-mixer>
+                </a-gltf-model>
+            </a-entity>
+
+            <!-- Luz puntual enfocada en el modelo -->
+            <a-light type="point" color="#ffaa00" intensity="3" distance="5" position="0 1 1"></a-light>
 
         </a-marker>
 
@@ -168,7 +171,6 @@
                 scanOverlay.style.opacity = '1';
             });
 
-            // Capturar pantalla WebGL + Cámara
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
