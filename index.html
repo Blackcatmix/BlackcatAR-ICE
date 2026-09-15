@@ -132,17 +132,17 @@
 
         <a-marker preset="hiro" id="marker">
             
-            <!-- Logo Blackcat con tamaño ampliado -->
+            <!-- Logo Blackcat ubicado pegado arriba del gato -->
             <a-plane 
                 src="#logoImg" 
-                position="0 2.2 -0.5" 
-                height="1.8" 
-                width="3.6" 
+                position="0 1.25 -0.1" 
+                height="1.2" 
+                width="2.4" 
                 material="transparent: true; side: double">
             </a-plane>
 
-            <!-- Gato Negro 3D -->
-            <a-entity position="0 0.1 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 9000; easing: linear">
+            <!-- Gato Negro 3D Agrandado -->
+            <a-entity position="0 0.1 0" scale="1.8 1.8 1.8" animation="property: rotation; to: 0 360 0; loop: true; dur: 9000; easing: linear">
                 <a-cone position="0 0.3 0" radius-bottom="0.22" radius-top="0.08" height="0.55" color="#111111" material="roughness: 0.2; metalness: 0.8"></a-cone>
                 <a-sphere position="0 0.62 0" radius="0.18" color="#111111" material="roughness: 0.2; metalness: 0.8"></a-sphere>
                 <a-cone position="-0.09 0.8 0" radius-bottom="0.05" radius-top="0.001" height="0.14" rotation="0 0 12" color="#111111"></a-cone>
