@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
+    <!-- Dependencias estables: A-Frame + AR.js + Animaciones -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
     <style>
         * {
@@ -123,37 +125,36 @@
         vr-mode-ui="enabled: false">
 
         <a-assets>
+            <!-- RECURSO GENÉRICO DE PRUEBAS 3D -->
+            <a-asset-item id="genericModel" src="./Model_3D.glb"></a-asset-item>
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación -->
-        <a-light type="ambient" color="#ffffff" intensity="1.8"></a-light>
-        <a-light type="directional" color="#ffb703" intensity="2.5" position="2 4 2"></a-light>
+        <!-- Iluminación de ambiente y acento para la barra -->
+        <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
+        <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
         <a-marker preset="hiro" id="marker">
             
-            <!-- LOGO: Modificá 'position' (X Y Z) o 'width' / 'height' -->
+            <!-- LOGO BLACKCAT (Ajustable) -->
             <a-plane 
+                id="brandLogo"
                 src="#logoImg" 
-                position="0 1.1 -0.2" 
+                position="0 1.2 -0.2" 
                 height="1.2" 
                 width="2.4" 
                 material="transparent: true; side: double">
             </a-plane>
 
-            <!-- GATO: Modificá 'scale' para ajustar el tamaño general -->
-            <a-entity position="0 0.1 0" scale="1 1 1" animation="property: rotation; to: 0 360 0; loop: true; dur: 9000; easing: linear">
-                <a-cone position="0 0.3 0" radius-bottom="0.22" radius-top="0.08" height="0.55" color="#111111" material="roughness: 0.2; metalness: 0.8"></a-cone>
-                <a-sphere position="0 0.62 0" radius="0.18" color="#111111" material="roughness: 0.2; metalness: 0.8"></a-sphere>
-                <a-cone position="-0.09 0.8 0" radius-bottom="0.05" radius-top="0.001" height="0.14" rotation="0 0 12" color="#111111"></a-cone>
-                <a-cone position="0.09 0.8 0" radius-bottom="0.05" radius-top="0.001" height="0.14" rotation="0 0 -12" color="#111111"></a-cone>
-                <a-sphere position="-0.06 0.65 0.14" radius="0.035" color="#ffaa00" material="emissive: #ffaa00; emissiveIntensity: 0.6"></a-sphere>
-                <a-sphere position="0.06 0.65 0.14" radius="0.035" color="#ffaa00" material="emissive: #ffaa00; emissiveIntensity: 0.6"></a-sphere>
-                <a-sphere position="-0.06 0.65 0.17" radius="0.015" color="#000000"></a-sphere>
-                <a-sphere position="0.06 0.65 0.17" radius="0.015" color="#000000"></a-sphere>
-                <a-sphere position="0 0.6 0.16" radius="0.02" color="#ffffff"></a-sphere>
-                <a-cylinder position="0 0.2 -0.2" radius="0.02" height="0.45" rotation="35 0 0" color="#111111"></a-cylinder>
-            </a-entity>
+            <!-- MODELO 3D GENÉRICO (Ajustable desde JS) -->
+            <a-gltf-model 
+                id="activeModel"
+                src="#genericModel" 
+                position="0 0 0" 
+                scale="1 1 1"
+                rotation="0 0 0"
+                animation-mixer>
+            </a-gltf-model>
 
         </a-marker>
 
@@ -161,9 +162,34 @@
     </a-scene>
 
     <script>
+        // =================================================================
+        // 🎛️ PANEL DE CONTROL DE PRUEBAS RÁPIDAS (3TECHLAB)
+        // Editá estos valores según el modelo que estés probando:
+        // =================================================================
+        const CONFIG = {
+            modelScale: "0.05 0.05 0.05", // Cambiá si el modelo es gigante o chiquito
+            modelPosition: "0 0 0",       // X Y Z para centrarlo sobre el marcador
+            logoPosition: "0 1.5 -0.2",   // Ubicación del logo respecto al modelo
+            logoWidth: 2.4,               // Ancho del logo
+            logoHeight: 1.2               // Alto del logo
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             const marker = document.getElementById('marker');
             const scanOverlay = document.getElementById('scanning-overlay');
+            const activeModel = document.getElementById('activeModel');
+            const brandLogo = document.getElementById('brandLogo');
+
+            // Aplicar configuración inicial
+            if (activeModel) {
+                activeModel.setAttribute('scale', CONFIG.modelScale);
+                activeModel.setAttribute('position', CONFIG.modelPosition);
+            }
+            if (brandLogo) {
+                brandLogo.setAttribute('position', CONFIG.logoPosition);
+                brandLogo.setAttribute('width', CONFIG.logoWidth);
+                brandLogo.setAttribute('height', CONFIG.logoHeight);
+            }
 
             marker.addEventListener("markerFound", () => {
                 scanOverlay.style.opacity = '0';
@@ -173,6 +199,7 @@
                 scanOverlay.style.opacity = '1';
             });
 
+            // Captura de Pantalla
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
