@@ -91,6 +91,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
+        /* Cartel de escaneo */
         #scanning-overlay {
             position: fixed;
             top: 50%;
@@ -99,12 +100,46 @@
             color: #fff;
             font-size: 0.85rem;
             background: rgba(0,0,0,0.85);
-            padding: 12px 24px;
-            border-radius: 12px;
+            padding: 14px 28px;
+            border-radius: 14px;
             pointer-events: none;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease;
             z-index: 5;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+
+        /* Indicador / Spinner de carga de modelo 3D */
+        #loading-spinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 6;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 
@@ -130,6 +165,10 @@
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
         <div id="scanning-overlay">Apunta la cámara al marcador...</div>
+        <div id="loading-spinner">
+            <div class="spinner"></div>
+            <span>Cargando experiencia 3D...</span>
+        </div>
         <div class="controls-container">
             <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
         </div>
@@ -152,11 +191,12 @@
 
         <a-marker preset="hiro" id="marker">
             
-            <!-- Logo Blackcat -->
+            <!-- Logo Blackcat Agrandado, acercado al espectador y con animación Pulse -->
             <a-plane 
                 id="brandLogo"
                 src="#logoImg" 
-                material="transparent: true; side: double">
+                material="transparent: true; side: double"
+                animation__pulse="property: scale; to: 1.15 1.15 1.15; dir: alternate; loop: true; dur: 1800; easing: easeInOutSine">
             </a-plane>
 
             <!-- Modelo 3D con filtro Oculta-Suelo -->
@@ -173,41 +213,65 @@
     </a-scene>
 
     <script>
-        // 🎛️ CONTROLES DE CALIBRACIÓN
+        // 🎛️ CONTROLES DE CALIBRACIÓN 3TECHLAB
         const CONFIG = {
             modelScale: "0.15 0.15 0.15",    // Escala del cartel
             modelPosition: "0 0 0",        // Posición
             modelRotation: "0 0 0",        // Rotación inicial
-            logoPosition: "0 1.8 -0.3",    // Posición del logo arriba del cartel
-            logoWidth: 2.4,                // Ancho del logo
-            logoHeight: 1.2                // Alto del logo
+            logoPosition: "0 2.1 0.2",     // Logo elevado (Y=2.1) y más cerca del espectador (Z=0.2)
+            logoWidth: 3.2,                // Ancho del logo agrandado
+            logoHeight: 1.6                // Alto del logo agrandado
         };
 
         document.addEventListener("DOMContentLoaded", () => {
             const marker = document.getElementById('marker');
             const scanOverlay = document.getElementById('scanning-overlay');
+            const loadingSpinner = document.getElementById('loading-spinner');
             const activeModel = document.getElementById('activeModel');
             const brandLogo = document.getElementById('brandLogo');
 
+            let isModelLoaded = false;
+            let isMarkerFound = false;
+
+            // Configurar geometrías iniciales
             if (activeModel) {
                 activeModel.setAttribute('scale', CONFIG.modelScale);
                 activeModel.setAttribute('position', CONFIG.modelPosition);
                 activeModel.setAttribute('rotation', CONFIG.modelRotation);
+
+                activeModel.addEventListener('model-loaded', () => {
+                    isModelLoaded = true;
+                    if (isMarkerFound) {
+                        loadingSpinner.style.display = 'none';
+                    }
+                });
             }
+
             if (brandLogo) {
                 brandLogo.setAttribute('position', CONFIG.logoPosition);
                 brandLogo.setAttribute('width', CONFIG.logoWidth);
                 brandLogo.setAttribute('height', CONFIG.logoHeight);
             }
 
+            // Gestión de estados de la UI al detectar el marcador
             marker.addEventListener("markerFound", () => {
+                isMarkerFound = true;
                 scanOverlay.style.opacity = '0';
+
+                if (!isModelLoaded) {
+                    loadingSpinner.style.display = 'flex';
+                } else {
+                    loadingSpinner.style.display = 'none';
+                }
             });
 
             marker.addEventListener("markerLost", () => {
+                isMarkerFound = false;
                 scanOverlay.style.opacity = '1';
+                loadingSpinner.style.display = 'none';
             });
 
+            // Captura de pantalla
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
