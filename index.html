@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- CDNs Estables de A-Frame y AR.js -->
+    <!-- CDNs Estables de A-Frame, AR.js y Extras -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
@@ -75,13 +75,15 @@
         .controls-container {
             pointer-events: auto;
             margin-bottom: 25px;
+            display: flex;
+            gap: 12px;
         }
 
-        .btn-capture {
+        .btn-action {
             background: rgba(0, 0, 0, 0.85);
             color: #ffffff;
             border: 1.5px solid #ffffff;
-            padding: 14px 28px;
+            padding: 14px 22px;
             font-size: 0.85rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -167,6 +169,9 @@
 </head>
 <body>
 
+    <!-- Elemento Audio de HTML5 -->
+    <audio id="bgMusic" src="./blackcat_music.mp3" loop preload="auto"></audio>
+
     <div id="ui-overlay">
         <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
         <div id="scanning-overlay">Apunta la cámara al vaso...</div>
@@ -175,11 +180,11 @@
             <span>Cargando experiencia 3D...</span>
         </div>
         <div class="controls-container">
-            <button id="capture-btn" class="btn-capture">📷 Capturar Momento</button>
+            <button id="audio-btn" class="btn-action">🎵 Sonido: ON</button>
+            <button id="capture-btn" class="btn-action">📷 Capturar</button>
         </div>
     </div>
 
-    <!-- Escena AR optimizada para alta refracción en vaso/hielo -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720;"
@@ -191,7 +196,7 @@
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación de impacto -->
+        <!-- Iluminación -->
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
@@ -205,7 +210,7 @@
             smoothThreshold="8"
             minConfidence="0.15">
             
-            <!-- Logo Blackcat con efecto Pulse separado del cartel -->
+            <!-- Logo Blackcat -->
             <a-plane 
                 id="brandLogo"
                 src="#logoImg" 
@@ -229,10 +234,10 @@
     <script>
         // 🎛️ CONTROLES DE CALIBRACIÓN DE UBICACIÓN
         const CONFIG = {
-            modelScale: "0.004 0.004 0.004",    
+            modelScale: "0.15 0.15 0.15",    
             modelPosition: "0 0 0",        
             modelRotation: "0 0 0",        
-            logoPosition: "0 2.4 0.6",     // Y=2.4 (Más elevado sobre el cartel) | Z=0.6 (Separado del cuerpo 3D hacia la cámara)
+            logoPosition: "0 2.4 0.6",     
             logoWidth: 3.0,                
             logoHeight: 1.5                
         };
@@ -243,13 +248,42 @@
             const loadingSpinner = document.getElementById('loading-spinner');
             const activeModel = document.getElementById('activeModel');
             const brandLogo = document.getElementById('brandLogo');
+            const bgMusic = document.getElementById('bgMusic');
+            const audioBtn = document.getElementById('audio-btn');
 
             let isModelLoaded = false;
             let isMarkerFound = false;
+            let audioUnlocked = false;
+
+            // Función para iniciar audio tras la interacción del usuario
+            const unlockAudio = () => {
+                if (!audioUnlocked && bgMusic) {
+                    bgMusic.play().then(() => {
+                        audioUnlocked = true;
+                        audioBtn.innerText = "🎵 Mute";
+                    }).catch(err => console.log("Esperando toque del usuario..."));
+                }
+            };
+
+            // Habilitar audio en el primer toque de pantalla
+            window.addEventListener('click', unlockAudio, { once: true });
+            window.addEventListener('touchstart', unlockAudio, { once: true });
+
+            // Control manual Mute / Unmute
+            audioBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (bgMusic.paused) {
+                    bgMusic.play();
+                    audioBtn.innerText = "🎵 Mute";
+                } else {
+                    bgMusic.pause();
+                    audioBtn.innerText = "🎵 Sonido: OFF";
+                }
+            });
 
             if (activeModel) {
                 activeModel.setAttribute('scale', CONFIG.modelScale);
-                activeModel.setAttribute('position', CONFIG.modelPosition);
+                activeModel.setAttribute('position', CONFIG.position);
                 activeModel.setAttribute('rotation', CONFIG.modelRotation);
 
                 activeModel.addEventListener('model-loaded', () => {
@@ -269,6 +303,7 @@
             marker.addEventListener("markerFound", () => {
                 isMarkerFound = true;
                 scanOverlay.style.opacity = '0';
+                unlockAudio(); // Reproduce la música apenas detecta el vaso
 
                 if (!isModelLoaded) {
                     loadingSpinner.style.display = 'flex';
