@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- Dependencias estables: A-Frame + AR.js + Animaciones -->
+    <!-- Core CDNs: A-Frame + AR.js + Animación GLTF -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
@@ -125,34 +125,27 @@
         vr-mode-ui="enabled: false">
 
         <a-assets>
-            <!-- RECURSO GENÉRICO DE PRUEBAS 3D -->
             <a-asset-item id="genericModel" src="./Model_3D.glb"></a-asset-item>
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
 
-        <!-- Iluminación de ambiente y acento para la barra -->
+        <!-- Iluminación cálida de ambiente -->
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
         <a-marker preset="hiro" id="marker">
             
-            <!-- LOGO BLACKCAT (Ajustable) -->
+            <!-- Logo Blackcat al fondo -->
             <a-plane 
                 id="brandLogo"
                 src="#logoImg" 
-                position="0 1.2 -0.2" 
-                height="1.2" 
-                width="2.4" 
                 material="transparent: true; side: double">
             </a-plane>
 
-            <!-- MODELO 3D GENÉRICO (Ajustable desde JS) -->
+            <!-- Modelo 3D Activo -->
             <a-gltf-model 
                 id="activeModel"
                 src="#genericModel" 
-                position="0 0 0" 
-                scale="1 1 1"
-                rotation="0 0 0"
                 animation-mixer>
             </a-gltf-model>
 
@@ -163,15 +156,16 @@
 
     <script>
         // =================================================================
-        // 🎛️ PANEL DE CONTROL DE PRUEBAS RÁPIDAS (3TECHLAB)
-        // Editá estos valores según el modelo que estés probando:
+        // 🎛️ CONTROLES DE CALIBRACIÓN 3TECHLAB
+        // Modificá estos parámetros si el modelo aparece muy grande/chico:
         // =================================================================
         const CONFIG = {
-            modelScale: "0.05 0.05 0.05", // Cambiá si el modelo es gigante o chiquito
-            modelPosition: "0 0 0",       // X Y Z para centrarlo sobre el marcador
-            logoPosition: "0 1.5 -0.2",   // Ubicación del logo respecto al modelo
-            logoWidth: 2.4,               // Ancho del logo
-            logoHeight: 1.2               // Alto del logo
+            modelScale: "0.1 0.1 0.1",     // Escala del modelo 3D (X Y Z)
+            modelPosition: "0 0 0",        // Posición del modelo sobre el marcador
+            modelRotation: "0 0 0",        // Rotación inicial
+            logoPosition: "0 1.5 -0.3",    // Posición del logo respecto al marcador
+            logoWidth: 2.4,                // Ancho del logo
+            logoHeight: 1.2                // Alto del logo
         };
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -180,10 +174,11 @@
             const activeModel = document.getElementById('activeModel');
             const brandLogo = document.getElementById('brandLogo');
 
-            // Aplicar configuración inicial
+            // Cargar configuración de geometría
             if (activeModel) {
                 activeModel.setAttribute('scale', CONFIG.modelScale);
                 activeModel.setAttribute('position', CONFIG.modelPosition);
+                activeModel.setAttribute('rotation', CONFIG.modelRotation);
             }
             if (brandLogo) {
                 brandLogo.setAttribute('position', CONFIG.logoPosition);
@@ -199,7 +194,7 @@
                 scanOverlay.style.opacity = '1';
             });
 
-            // Captura de Pantalla
+            // Capturar pantalla WebGL + Cámara
             document.getElementById('capture-btn').addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
