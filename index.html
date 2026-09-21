@@ -153,11 +153,10 @@
         </div>
     </div>
 
-    <!-- Escena WebAR con suavizado agresivo y preservación de buffer -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; maxDetectionRate: 60;"
-        renderer="logarithmicDepthBuffer: true; alpha: true; precision: highp; antialias: true; preserveDrawingBuffer: true;"
+        renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true; preserveDrawingBuffer: true;"
         vr-mode-ui="enabled: false">
 
         <a-assets>
@@ -168,15 +167,8 @@
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- Filtro inercial alto (smoothCount 30) para evitar desenganche -->
-        <a-marker 
-            type="pattern" 
-            url="./blackcat_marker.patt" 
-            id="marker"
-            smooth="true"
-            smoothCount="30"
-            smoothTolerance="0.01"
-            smoothThreshold="2">
+        <!-- Usa Hiro por defecto para garantizar detección en cualquier dispositivo -->
+        <a-marker preset="hiro" id="marker">
             
             <a-plane 
                 id="brandLogo"
@@ -214,8 +206,7 @@
             const bgMusic = document.getElementById('bgMusic');
             const audioBtn = document.getElementById('audio-btn');
             const captureBtn = document.getElementById('capture-btn');
-
-            let sceneEl = document.querySelector('a-scene');
+            const sceneEl = document.querySelector('a-scene');
 
             if (activeModel) {
                 activeModel.setAttribute('scale', CONFIG.modelScale);
@@ -237,10 +228,11 @@
                 scanOverlay.style.opacity = '1';
             });
 
-            // 📷 CAPTURA DIRECTA FORZANDO FORWARD-RENDER
             captureBtn.addEventListener('click', () => {
-                // Forzar a WebGL a renderizar el cuadro actual explícitamente antes de capturar
-                sceneEl.renderer.render(sceneEl.object3D, sceneEl.camera);
+                // Forzado de render en WebGL para congelar el buffer antes de descargar
+                if (sceneEl.renderer && sceneEl.object3D && sceneEl.camera) {
+                    sceneEl.renderer.render(sceneEl.object3D, sceneEl.camera);
+                }
 
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
@@ -252,11 +244,9 @@
                 mergedCanvas.height = canvas.height;
                 const ctx = mergedCanvas.getContext('2d');
 
-                // DIBUJAR VIDEO Y SCENE
                 ctx.drawImage(video, 0, 0, mergedCanvas.width, mergedCanvas.height);
                 ctx.drawImage(canvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
 
-                // OVERLAY DE MARCA
                 const w = mergedCanvas.width;
                 const h = mergedCanvas.height;
 
