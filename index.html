@@ -120,21 +120,10 @@
             fill: #ffffff;
         }
 
-        .btn-audio .icon-muted {
-            display: block;
-        }
-
-        .btn-audio .icon-playing {
-            display: none;
-        }
-
-        .btn-audio.active .icon-muted {
-            display: none;
-        }
-
-        .btn-audio.active .icon-playing {
-            display: block;
-        }
+        .btn-audio .icon-muted { display: block; }
+        .btn-audio .icon-playing { display: none; }
+        .btn-audio.active .icon-muted { display: none; }
+        .btn-audio.active .icon-playing { display: block; }
 
         #scanning-overlay {
             position: fixed;
@@ -158,7 +147,7 @@
             top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -170,6 +159,7 @@
             z-index: 6;
             color: #fff;
             font-size: 0.85rem;
+            transition: opacity 0.3s ease;
         }
 
         .spinner {
@@ -218,7 +208,7 @@
         <div id="scanning-overlay">Apunta la cámara al vaso...</div>
         <div id="loading-spinner">
             <div class="spinner"></div>
-            <span>Cargando experiencia 3D...</span>
+            <span>Cargando recursos 3D...</span>
         </div>
         <div class="controls-container">
             <button id="audio-btn" class="btn-audio" aria-label="Toggle Audio">
@@ -239,7 +229,8 @@
         renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true;"
         vr-mode-ui="enabled: false">
 
-        <a-assets>
+        <!-- Asset Management con Precarga Activa -->
+        <a-assets timeout="10000">
             <a-asset-item id="genericModel" src="./Model_3D.glb"></a-asset-item>
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
@@ -247,25 +238,25 @@
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- Marcador Custom Blackcat con tolerancia para hielo -->
+        <!-- Marcador Custom con Orientación Estable -->
         <a-marker 
             type="pattern" 
             url="./blackcat_marker.patt" 
             id="marker"
             smooth="true"
             smoothCount="15"
-            smoothTolerance="0.1"
-            smoothThreshold="8"
-            minConfidence="0.15">
+            smoothTolerance="0.05"
+            smoothThreshold="10"
+            minConfidence="0.2">
             
-            <!-- Logo Blackcat ESTÁTICO (Sin animación pulse) -->
+            <!-- Logo Blackcat Estático -->
             <a-plane 
                 id="brandLogo"
                 src="#logoImg" 
                 material="transparent: true; side: double">
             </a-plane>
 
-            <!-- Modelo 3D con la nueva escala 0.0035 -->
+            <!-- Modelo 3D con Orientación y Escala Ajustadas -->
             <a-gltf-model 
                 id="activeModel"
                 src="#genericModel" 
@@ -279,11 +270,11 @@
     </a-scene>
 
     <script>
-        // 🎛️ CONTROLES DE CALIBRACIÓN DE UBICACIÓN Y ESCALA
+        // 🎛️ CONFIGURACIÓN DE ESCALA Y ROTACIÓN (3TECHLAB)
         const CONFIG = {
-            modelScale: "0.0035 0.0035 0.0035", // Escala ajustada
+            modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
-            modelRotation: "0 0 0",        
+            modelRotation: "0 0 0",        // Si el modelo 3D vuelve a salir invertido, cambia este valor a "0 180 0"
             logoPosition: "0 2.4 0.6",     
             logoWidth: 3.0,                
             logoHeight: 1.5                
@@ -297,10 +288,18 @@
             const brandLogo = document.getElementById('brandLogo');
             const bgMusic = document.getElementById('bgMusic');
             const audioBtn = document.getElementById('audio-btn');
+            const assets = document.querySelector('a-assets');
 
             let isModelLoaded = false;
             let isMarkerFound = false;
             let audioUnlocked = false;
+
+            // Ocultar spinner cuando los assets 3D están precargados en memoria
+            assets.addEventListener('loaded', () => {
+                isModelLoaded = true;
+                loadingSpinner.style.opacity = '0';
+                setTimeout(() => { loadingSpinner.style.display = 'none'; }, 300);
+            });
 
             const unlockAudio = () => {
                 if (!audioUnlocked && bgMusic) {
@@ -329,13 +328,6 @@
                 activeModel.setAttribute('scale', CONFIG.modelScale);
                 activeModel.setAttribute('position', CONFIG.modelPosition);
                 activeModel.setAttribute('rotation', CONFIG.modelRotation);
-
-                activeModel.addEventListener('model-loaded', () => {
-                    isModelLoaded = true;
-                    if (isMarkerFound) {
-                        loadingSpinner.style.display = 'none';
-                    }
-                });
             }
 
             if (brandLogo) {
@@ -348,18 +340,11 @@
                 isMarkerFound = true;
                 scanOverlay.style.opacity = '0';
                 unlockAudio();
-
-                if (!isModelLoaded) {
-                    loadingSpinner.style.display = 'flex';
-                } else {
-                    loadingSpinner.style.display = 'none';
-                }
             });
 
             marker.addEventListener("markerLost", () => {
                 isMarkerFound = false;
                 scanOverlay.style.opacity = '1';
-                loadingSpinner.style.display = 'none';
             });
 
             document.getElementById('capture-btn').addEventListener('click', () => {
