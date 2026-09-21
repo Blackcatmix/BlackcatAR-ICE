@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
+    <!-- CDNs Estables A-Frame y AR.js -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
@@ -246,7 +247,7 @@
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- MARCADOR CUSTOM BLACKCAT (Reemplaza a Hiro) -->
+        <!-- Marcador Custom Blackcat con tolerancia para hielo -->
         <a-marker 
             type="pattern" 
             url="./blackcat_marker.patt" 
@@ -257,13 +258,14 @@
             smoothThreshold="8"
             minConfidence="0.15">
             
+            <!-- Logo Blackcat ESTÁTICO (Sin animación pulse) -->
             <a-plane 
                 id="brandLogo"
                 src="#logoImg" 
-                material="transparent: true; side: double"
-                animation__pulse="property: scale; to: 1.12 1.15 1.15; dir: alternate; loop: true; dur: 1800; easing: easeInOutSine">
+                material="transparent: true; side: double">
             </a-plane>
 
+            <!-- Modelo 3D con la nueva escala 0.0035 -->
             <a-gltf-model 
                 id="activeModel"
                 src="#genericModel" 
@@ -277,8 +279,9 @@
     </a-scene>
 
     <script>
+        // 🎛️ CONTROLES DE CALIBRACIÓN DE UBICACIÓN Y ESCALA
         const CONFIG = {
-            modelScale: "0.0035 0.0035 0.0035",    
+            modelScale: "0.0035 0.0035 0.0035", // Escala ajustada
             modelPosition: "0 0 0",        
             modelRotation: "0 0 0",        
             logoPosition: "0 2.4 0.6",     
