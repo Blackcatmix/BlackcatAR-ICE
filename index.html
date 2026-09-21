@@ -80,15 +80,15 @@
         }
 
         #scanning-overlay {
-            color: #ffaa00;
+            color: #ffffff;
             font-size: 0.8rem;
             font-weight: 600;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.75);
             padding: 8px 18px;
             border-radius: 20px;
             pointer-events: none;
             transition: opacity 0.3s ease;
-            border: 1px solid rgba(255,170,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
             backdrop-filter: blur(8px);
         }
@@ -142,83 +142,6 @@
         .btn-audio .icon-playing { display: none; }
         .btn-audio.active .icon-muted { display: none; }
         .btn-audio.active .icon-playing { display: block; }
-
-        /* 🎁 MODAL DE PREMIOS / GAMIFICACIÓN (3TECHLAB) */
-        #reward-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 24px;
-        }
-
-        .reward-card {
-            background: #111111;
-            border: 2px solid #ffaa00;
-            border-radius: 20px;
-            padding: 28px 20px;
-            text-align: center;
-            max-width: 320px;
-            width: 100%;
-            box-shadow: 0 0 30px rgba(255, 170, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .reward-card h2 {
-            color: #ffaa00;
-            font-size: 1.3rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .reward-card p {
-            color: #dddddd;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .coupon-code {
-            background: #222222;
-            color: #ffffff;
-            font-family: monospace;
-            font-size: 1.5rem;
-            font-weight: bold;
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 1px dashed #ffaa00;
-            letter-spacing: 4px;
-            width: 100%;
-        }
-
-        .timer-badge {
-            color: #ff4444;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .btn-close-modal {
-            background: #ffaa00;
-            color: #000000;
-            border: none;
-            padding: 12px 28px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            margin-top: 10px;
-        }
     </style>
 
     <script>
@@ -251,7 +174,7 @@
     <div id="ui-overlay">
         <div class="header-group">
             <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-            <div id="scanning-overlay">Enfoca el vaso y toca la bandera...</div>
+            <div id="scanning-overlay">Enfoca el marcador Hiro...</div>
         </div>
 
         <div class="controls-container">
@@ -263,18 +186,7 @@
         </div>
     </div>
 
-    <!-- Modal de Recompensa Gamificada -->
-    <div id="reward-modal">
-        <div class="reward-card">
-            <h2>¡Premio Encontrado!</h2>
-            <p id="reward-description">¡Ganaste un 2x1 en tu próximo cocktail Blackcat!</p>
-            <div class="coupon-code" id="coupon-code">BC-7729</div>
-            <div class="timer-badge">Muestra este código al bartender en <span id="timer">05:00</span></div>
-            <button id="close-modal-btn" class="btn-close-modal">Continuar</button>
-        </div>
-    </div>
-
-    <!-- Escena AR.js con Raycaster para Selección Móvil -->
+    <!-- Escena AR.js Limpia -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false;"
@@ -285,9 +197,6 @@
             <a-asset-item id="genericModel" src="./Model_3D.glb"></a-asset-item>
             <img id="logoImg" src="./blackcat_logo.png">
         </a-assets>
-
-        <!-- Raycaster Táctil para interactuar con los elementos 3D -->
-        <a-entity cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
 
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
@@ -302,14 +211,12 @@
             
             <a-plane 
                 id="brandLogo"
-                class="clickable"
                 src="#logoImg" 
                 material="shader: flat; transparent: true; side: double">
             </a-plane>
 
             <a-gltf-model 
                 id="activeModel"
-                class="clickable"
                 src="#genericModel" 
                 hide-floor
                 animation-mixer>
@@ -325,19 +232,12 @@
         const CONFIG = {
             modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
-            modelRotation: "-35 0 0",      // Inclinación hacia la cámara para vista cenital
-            logoPosition: "0 3.0 0.3",     // Ubicación por encima del mástil
-            logoRotation: "-35 0 0",       // Misma inclinación que el modelo 3D
+            modelRotation: "-35 0 0",      // Inclinación hacia la cámara
+            logoPosition: "0 3.0 0.3",     // Posición sobre el mástil
+            logoRotation: "-35 0 0",       // Inclinación coordinada del logo
             logoWidth: 3.5,                
             logoHeight: 1.75                
         };
-
-        const PREMIOS = [
-            { text: "¡Ganaste un 2x1 en tu próximo cocktail Blackcat!", code: "BC-2X1" },
-            { text: "¡Shot de la casa gratis con tu pedido!", code: "BC-SHOT" },
-            { text: "¡15% OFF en la cuenta total de la mesa!", code: "BC-15OFF" },
-            { text: "¡Sugerencia del Bartender: Pide un Blackcat Storm!", code: "BC-STORM" }
-        ];
 
         document.addEventListener("DOMContentLoaded", () => {
             const marker = document.getElementById('marker');
@@ -347,23 +247,16 @@
             const bgMusic = document.getElementById('bgMusic');
             const audioBtn = document.getElementById('audio-btn');
             const captureBtn = document.getElementById('capture-btn');
-            const rewardModal = document.getElementById('reward-modal');
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            const rewardDescription = document.getElementById('reward-description');
-            const couponCode = document.getElementById('coupon-code');
-            const timerEl = document.getElementById('timer');
             const sceneEl = document.querySelector('a-scene');
 
-            let isSpinning = false;
             let audioUnlocked = false;
 
-            // Desbloqueo de Audio Móvil
             const unlockAudio = () => {
                 if (!audioUnlocked && bgMusic) {
                     bgMusic.play().then(() => {
                         audioUnlocked = true;
                         audioBtn.classList.add('active');
-                    }).catch(err => console.log("Esperando toque..."));
+                    }).catch(err => console.log("Esperando toque de usuario..."));
                 }
             };
 
@@ -402,69 +295,6 @@
             marker.addEventListener("markerLost", () => {
                 scanOverlay.style.opacity = '1';
             });
-
-            // 🕹️ MECÁNICA DE GAMEPLAY "TAP & WIN"
-            const triggerGame = () => {
-                if (isSpinning) return;
-
-                const lastPlay = localStorage.getItem('blackcat_last_play');
-                if (lastPlay && (Date.now() - parseInt(lastPlay)) < 30 * 60 * 1000) {
-                    alert("¡Ya jugaste en esta ronda! Vuelve a intentar en 30 minutos.");
-                    return;
-                }
-
-                isSpinning = true;
-
-                // Animación de Giro de Ruleta 3D
-                activeModel.setAttribute('animation', {
-                    property: 'rotation',
-                    to: '-35 1080 0',
-                    dur: 2500,
-                    easing: 'easeOutQuad'
-                });
-
-                setTimeout(() => {
-                    const premio = PREMIOS[Math.floor(Math.random() * PREMIOS.length)];
-                    const codeUnique = `${premio.code}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-                    rewardDescription.innerText = premio.text;
-                    couponCode.innerText = codeUnique;
-
-                    rewardModal.style.display = 'flex';
-                    localStorage.setItem('blackcat_last_play', Date.now().toString());
-
-                    activeModel.removeAttribute('animation');
-                    activeModel.setAttribute('rotation', CONFIG.modelRotation);
-                    isSpinning = false;
-
-                    startTimer(300, timerEl);
-                }, 2600);
-            };
-
-            if (activeModel) activeModel.addEventListener('click', triggerGame);
-            if (brandLogo) brandLogo.addEventListener('click', triggerGame);
-
-            closeModalBtn.addEventListener('click', () => {
-                rewardModal.style.display = 'none';
-            });
-
-            function startTimer(duration, display) {
-                let timer = duration, minutes, seconds;
-                const interval = setInterval(function () {
-                    minutes = parseInt(timer / 60, 10);
-                    seconds = parseInt(timer % 60, 10);
-
-                    minutes = minutes < 10 ? "0" + minutes : minutes;
-                    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-                    display.textContent = minutes + ":" + seconds;
-
-                    if (--timer < 0) {
-                        clearInterval(interval);
-                        display.textContent = "EXPIRADO";
-                    }
-                }, 1000);
-            }
 
             // 📷 CAPTURA FOTOGRÁFICA DE PANTALLA
             captureBtn.addEventListener('click', () => {
