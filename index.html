@@ -140,6 +140,29 @@
         .btn-audio.active .icon-muted { display: none; }
         .btn-audio.active .icon-playing { display: block; }
     </style>
+
+    <script>
+        AFRAME.registerComponent('hide-floor', {
+            init: function () {
+                this.el.addEventListener('model-loaded', () => {
+                    const obj = this.el.getObject3D('mesh');
+                    if (!obj) return;
+                    obj.traverse((child) => {
+                        if (child.isMesh) {
+                            if (child.material) {
+                                child.material.polygonOffset = true;
+                                child.material.polygonOffsetFactor = 1;
+                                child.material.polygonOffsetUnits = 1;
+                            }
+                            if (child.name.includes('Plane') || child.name.includes('Floor') || child.name.includes('Shiny_Floor')) {
+                                child.visible = false;
+                            }
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 </head>
 <body>
 
@@ -182,7 +205,6 @@
             smoothTolerance="0.05"
             smoothThreshold="5">
             
-            <!-- Logo con shader flat para que se ilumine siempre sin importar la cámara -->
             <a-plane 
                 id="brandLogo"
                 src="#logoImg" 
@@ -205,8 +227,9 @@
         const CONFIG = {
             modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
-            modelRotation: "0 0 0",        
-            logoPosition: "0 3 0.2",     // Posición justa encima de la bandera
+            modelRotation: "-35 0 0",      // Inclinación ajustada a -35°
+            logoPosition: "0 3.0 0.3",     // Posición justo encima del mástil
+            logoRotation: "-35 0 0",       // Misma inclinación que el modelo 3D
             logoWidth: 3.5,                
             logoHeight: 1.75                
         };
@@ -221,6 +244,31 @@
             const captureBtn = document.getElementById('capture-btn');
             const sceneEl = document.querySelector('a-scene');
 
+            let audioUnlocked = false;
+
+            const unlockAudio = () => {
+                if (!audioUnlocked && bgMusic) {
+                    bgMusic.play().then(() => {
+                        audioUnlocked = true;
+                        audioBtn.classList.add('active');
+                    }).catch(err => console.log("Esperando toque de usuario..."));
+                }
+            };
+
+            window.addEventListener('click', unlockAudio, { once: true });
+            window.addEventListener('touchstart', unlockAudio, { once: true });
+
+            audioBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (bgMusic.paused) {
+                    bgMusic.play();
+                    audioBtn.classList.add('active');
+                } else {
+                    bgMusic.pause();
+                    audioBtn.classList.remove('active');
+                }
+            });
+
             if (activeModel) {
                 activeModel.setAttribute('scale', CONFIG.modelScale);
                 activeModel.setAttribute('position', CONFIG.modelPosition);
@@ -229,12 +277,14 @@
 
             if (brandLogo) {
                 brandLogo.setAttribute('position', CONFIG.logoPosition);
+                brandLogo.setAttribute('rotation', CONFIG.logoRotation);
                 brandLogo.setAttribute('width', CONFIG.logoWidth);
                 brandLogo.setAttribute('height', CONFIG.logoHeight);
             }
 
             marker.addEventListener("markerFound", () => {
                 scanOverlay.style.opacity = '0';
+                unlockAudio();
             });
 
             marker.addEventListener("markerLost", () => {
