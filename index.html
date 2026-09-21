@@ -92,6 +92,13 @@
             cursor: pointer;
             backdrop-filter: blur(5px);
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .btn-capture:active {
+            transform: scale(0.95);
+            background-color: #ffffff;
+            color: #000000;
         }
 
         .btn-audio {
@@ -229,7 +236,6 @@
         renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true;"
         vr-mode-ui="enabled: false">
 
-        <!-- Asset Management con Precarga Activa -->
         <a-assets timeout="10000">
             <a-asset-item id="genericModel" src="./Model_3D.glb"></a-asset-item>
             <img id="logoImg" src="./blackcat_logo.png">
@@ -238,7 +244,6 @@
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- Marcador Custom con Orientación Estable -->
         <a-marker 
             type="pattern" 
             url="./blackcat_marker.patt" 
@@ -249,14 +254,12 @@
             smoothThreshold="10"
             minConfidence="0.2">
             
-            <!-- Logo Blackcat Estático -->
             <a-plane 
                 id="brandLogo"
                 src="#logoImg" 
                 material="transparent: true; side: double">
             </a-plane>
 
-            <!-- Modelo 3D con Orientación y Escala Ajustadas -->
             <a-gltf-model 
                 id="activeModel"
                 src="#genericModel" 
@@ -270,11 +273,10 @@
     </a-scene>
 
     <script>
-        // 🎛️ CONFIGURACIÓN DE ESCALA Y ROTACIÓN (3TECHLAB)
         const CONFIG = {
             modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
-            modelRotation: "0 0 0",        // Si el modelo 3D vuelve a salir invertido, cambia este valor a "0 180 0"
+            modelRotation: "0 0 0",        
             logoPosition: "0 2.4 0.6",     
             logoWidth: 3.0,                
             logoHeight: 1.5                
@@ -288,13 +290,13 @@
             const brandLogo = document.getElementById('brandLogo');
             const bgMusic = document.getElementById('bgMusic');
             const audioBtn = document.getElementById('audio-btn');
+            const captureBtn = document.getElementById('capture-btn');
             const assets = document.querySelector('a-assets');
 
             let isModelLoaded = false;
             let isMarkerFound = false;
             let audioUnlocked = false;
 
-            // Ocultar spinner cuando los assets 3D están precargados en memoria
             assets.addEventListener('loaded', () => {
                 isModelLoaded = true;
                 loadingSpinner.style.opacity = '0';
@@ -347,22 +349,57 @@
                 scanOverlay.style.opacity = '1';
             });
 
-            document.getElementById('capture-btn').addEventListener('click', () => {
+            // 📷 MÓDULO DE CAPTURA SOCIAL BRANDING (3TECHLAB)
+            captureBtn.addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
 
                 if (!video || !canvas) return;
 
+                // Crear lienzo de alta resolución
                 const mergedCanvas = document.createElement('canvas');
                 mergedCanvas.width = canvas.width;
                 mergedCanvas.height = canvas.height;
                 const ctx = mergedCanvas.getContext('2d');
 
+                // 1. Dibujar Feed de Cámara Web
                 ctx.drawImage(video, 0, 0, mergedCanvas.width, mergedCanvas.height);
+
+                // 2. Dibujar Escena 3D WebGL
                 ctx.drawImage(canvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
 
+                // 3. CAPA DE BRANDING DE MARCA (OVERLAY)
+                const w = mergedCanvas.width;
+                const h = mergedCanvas.height;
+
+                // Gradient superior e inferior para legibilidad
+                const gradTop = ctx.createLinearGradient(0, 0, 0, 120);
+                gradTop.addColorStop(0, 'rgba(0,0,0,0.8)');
+                gradTop.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = gradTop;
+                ctx.fillRect(0, 0, w, 120);
+
+                const gradBottom = ctx.createLinearGradient(0, h - 120, 0, h);
+                gradBottom.addColorStop(0, 'rgba(0,0,0,0)');
+                gradBottom.addColorStop(1, 'rgba(0,0,0,0.85)');
+                ctx.fillStyle = gradBottom;
+                ctx.fillRect(0, h - 120, w, 120);
+
+                // Texto Superior: BLACKCAT
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.letterSpacing = '3px';
+                ctx.fillText('BLACKCAT • BEBIDAS & COCKTAILS', w / 2, 50);
+
+                // Watermark Inferior
+                ctx.font = '14px sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fillText('EXPERIENCIA WEBAR EN BARRA', w / 2, h - 35);
+
+                // 4. Exportar y Descargar Imagen Brandeada
                 const link = document.createElement('a');
-                link.download = `Blackcat_AR_${Date.now()}.png`;
+                link.download = `Blackcat_Cocktails_${Date.now()}.png`;
                 link.href = mergedCanvas.toDataURL('image/png');
                 link.click();
             });
