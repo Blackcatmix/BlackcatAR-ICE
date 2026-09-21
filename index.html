@@ -205,18 +205,20 @@
             smoothTolerance="0.05"
             smoothThreshold="5">
             
-            <a-plane 
-                id="brandLogo"
-                src="#logoImg" 
-                material="shader: flat; transparent: true; side: double">
-            </a-plane>
-
+            <!-- Modelo 3D erguido sobre el plano -->
             <a-gltf-model 
                 id="activeModel"
                 src="#genericModel" 
                 hide-floor
                 animation-mixer>
             </a-gltf-model>
+
+            <!-- Plano del logo erguido en 90° mirando al espectador, posicionado justo sobre la punta de la bandera -->
+            <a-plane 
+                id="brandLogo"
+                src="#logoImg" 
+                material="shader: flat; transparent: true; side: double">
+            </a-plane>
 
         </a-marker>
 
@@ -227,11 +229,11 @@
         const CONFIG = {
             modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
-            modelRotation: "-35 0 0",      // Inclinación ajustada a -35°
-            logoPosition: "0 5.2 0",     // Posición justo encima del mástil
-            logoRotation: "-35 0 0",       // Misma inclinación que el modelo 3D
-            logoWidth: 3.5,                
-            logoHeight: 1.75                
+            modelRotation: "0 0 0",        // Modelo 3D perpendicular estándar
+            logoPosition: "0 2.2 0",       // Posición Y arriba del mástil, Z centrado
+            logoRotation: "-90 0 0",       // Orientado plano hacia la vista cenital o 0 0 0
+            logoWidth: 3.2,                
+            logoHeight: 1.6                
         };
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -251,7 +253,7 @@
                     bgMusic.play().then(() => {
                         audioUnlocked = true;
                         audioBtn.classList.add('active');
-                    }).catch(err => console.log("Esperando toque de usuario..."));
+                    }).catch(err => console.log("Esperando interacción..."));
                 }
             };
 
@@ -277,7 +279,8 @@
 
             if (brandLogo) {
                 brandLogo.setAttribute('position', CONFIG.logoPosition);
-                brandLogo.setAttribute('rotation', CONFIG.logoRotation);
+                // Si la vista es de arriba, rotamos a 0 0 0 para alinearlo directo con los ojos
+                brandLogo.setAttribute('rotation', "0 0 0");
                 brandLogo.setAttribute('width', CONFIG.logoWidth);
                 brandLogo.setAttribute('height', CONFIG.logoHeight);
             }
