@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Blackcat WebAR Experience - 3TECHLAB</title>
 
-    <!-- CDNs Estables A-Frame y AR.js -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
@@ -38,9 +37,7 @@
             margin: 0 !important;
         }
 
-        .a-enter-vr {
-            display: none !important;
-        }
+        .a-enter-vr { display: none !important; }
 
         #ui-overlay {
             position: fixed;
@@ -117,16 +114,8 @@
             transition: transform 0.2s ease;
         }
 
-        .btn-audio:active {
-            transform: scale(0.92);
-        }
-
-        .btn-audio svg {
-            width: 24px;
-            height: 24px;
-            fill: #ffffff;
-        }
-
+        .btn-audio:active { transform: scale(0.92); }
+        .btn-audio svg { width: 24px; height: 24px; fill: #ffffff; }
         .btn-audio .icon-muted { display: block; }
         .btn-audio .icon-playing { display: none; }
         .btn-audio.active .icon-muted { display: none; }
@@ -178,9 +167,7 @@
             animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 
     <script>
@@ -230,10 +217,11 @@
         </div>
     </div>
 
+    <!-- FIX RENDERER: preserveDrawingBuffer: true permite capturar el canvas 3D -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720;"
-        renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true;"
+        renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true; preserveDrawingBuffer: true;"
         vr-mode-ui="enabled: false">
 
         <a-assets timeout="10000">
@@ -252,7 +240,7 @@
             smoothCount="15"
             smoothTolerance="0.05"
             smoothThreshold="10"
-            minConfidence="0.2">
+            minConfidence="0.15">
             
             <a-plane 
                 id="brandLogo"
@@ -349,30 +337,23 @@
                 scanOverlay.style.opacity = '1';
             });
 
-            // 📷 MÓDULO DE CAPTURA SOCIAL BRANDING (3TECHLAB)
             captureBtn.addEventListener('click', () => {
                 const video = document.querySelector('video');
                 const canvas = document.querySelector('canvas.a-canvas');
 
                 if (!video || !canvas) return;
 
-                // Crear lienzo de alta resolución
                 const mergedCanvas = document.createElement('canvas');
                 mergedCanvas.width = canvas.width;
                 mergedCanvas.height = canvas.height;
                 const ctx = mergedCanvas.getContext('2d');
 
-                // 1. Dibujar Feed de Cámara Web
                 ctx.drawImage(video, 0, 0, mergedCanvas.width, mergedCanvas.height);
-
-                // 2. Dibujar Escena 3D WebGL
                 ctx.drawImage(canvas, 0, 0, mergedCanvas.width, mergedCanvas.height);
 
-                // 3. CAPA DE BRANDING DE MARCA (OVERLAY)
                 const w = mergedCanvas.width;
                 const h = mergedCanvas.height;
 
-                // Gradient superior e inferior para legibilidad
                 const gradTop = ctx.createLinearGradient(0, 0, 0, 120);
                 gradTop.addColorStop(0, 'rgba(0,0,0,0.8)');
                 gradTop.addColorStop(1, 'rgba(0,0,0,0)');
@@ -385,19 +366,16 @@
                 ctx.fillStyle = gradBottom;
                 ctx.fillRect(0, h - 120, w, 120);
 
-                // Texto Superior: BLACKCAT
                 ctx.fillStyle = '#FFFFFF';
                 ctx.font = 'bold 24px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.letterSpacing = '3px';
                 ctx.fillText('BLACKCAT • BEBIDAS & COCKTAILS', w / 2, 50);
 
-                // Watermark Inferior
                 ctx.font = '14px sans-serif';
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
                 ctx.fillText('EXPERIENCIA WEBAR EN BARRA', w / 2, h - 35);
 
-                // 4. Exportar y Descargar Imagen Brandeada
                 const link = document.createElement('a');
                 link.download = `Blackcat_Cocktails_${Date.now()}.png`;
                 link.href = mergedCanvas.toDataURL('image/png');
