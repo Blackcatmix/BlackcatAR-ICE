@@ -183,47 +183,40 @@
         </div>
     </div>
 
-    <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false;"
-        renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true; preserveDrawingBuffer: true;"
-        vr-mode-ui="enabled: false">
+<a-scene 
+    embedded 
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.50;"
+    renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true; preserveDrawingBuffer: true;"
+    vr-mode-ui="enabled: false">
 
-        <a-assets>
-            <a-asset-item id="genericModel" src="./Model_3D.glb"></a-asset-item>
-            <img id="logoImg" src="./blackcat_logo.png">
-        </a-assets>
+    <!-- Marcador Custom Blackcat con retención inercial -->
+    <a-marker 
+        type="pattern" 
+        url="./blackcat_marker.patt" 
+        id="marker"
+        smooth="true"
+        smoothCount="15"
+        smoothTolerance="0.05"
+        smoothThreshold="5"
+        minConfidence="0.2">
+        
+        <a-gltf-model 
+            id="activeModel"
+            src="./Model_3D.glb" 
+            hide-floor
+            animation-mixer>
+        </a-gltf-model>
 
-        <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
-        <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
+        <a-plane 
+            id="brandLogo"
+            src="./blackcat_logo.png" 
+            material="shader: flat; transparent: true; side: double">
+        </a-plane>
 
-        <a-marker 
-            preset="hiro" 
-            id="marker"
-            smooth="true"
-            smoothCount="15"
-            smoothTolerance="0.05"
-            smoothThreshold="5">
-            
-            <!-- Modelo 3D erguido sobre el plano -->
-            <a-gltf-model 
-                id="activeModel"
-                src="#genericModel" 
-                hide-floor
-                animation-mixer>
-            </a-gltf-model>
+    </a-marker>
 
-            <!-- Plano del logo erguido en 90° mirando al espectador, posicionado justo sobre la punta de la bandera -->
-            <a-plane 
-                id="brandLogo"
-                src="#logoImg" 
-                material="shader: flat; transparent: true; side: double">
-            </a-plane>
-
-        </a-marker>
-
-        <a-entity camera></a-entity>
-    </a-scene>
+    <a-entity camera></a-entity>
+</a-scene>
 
     <script>
         const CONFIG = {
