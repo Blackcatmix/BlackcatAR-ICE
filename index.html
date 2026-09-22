@@ -25,6 +25,7 @@
             overflow: hidden !important;
             position: fixed !important;
             background-color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         video, canvas {
@@ -171,7 +172,7 @@
     <div id="ui-overlay">
         <div class="header-group">
             <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-            <div id="scanning-overlay">Enfoca el marcador...</div>
+            <div id="scanning-overlay">Apuntá al hielo...</div>
         </div>
 
         <div class="controls-container">
@@ -183,48 +184,57 @@
         </div>
     </div>
 
-<a-scene 
-    embedded 
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.50;"
-    renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true; preserveDrawingBuffer: true;"
-    vr-mode-ui="enabled: false">
+    <!-- Escena configurada con Tolerancia y Filtros para Entornos con Líquidos/Vidrio -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.50; maxDetectionRate: 60;"
+        renderer="logarithmicDepthBuffer: true; alpha: true; precision: mediump; antialias: true; preserveDrawingBuffer: true;"
+        vr-mode-ui="enabled: false">
 
-    <!-- Marcador Custom Blackcat con retención inercial -->
-    <a-marker 
-        type="pattern" 
-        url="./blackcat_marker.patt" 
-        id="marker"
-        smooth="true"
-        smoothCount="15"
-        smoothTolerance="0.05"
-        smoothThreshold="5"
-        minConfidence="0.2">
-        
-        <a-gltf-model 
-            id="activeModel"
-            src="./Model_3D.glb" 
-            hide-floor
-            animation-mixer>
-        </a-gltf-model>
+        <a-assets>
+            <a-asset-item id="genericModel" src="./Model_3D.glb"></a-asset-item>
+            <img id="logoImg" src="./blackcat_logo.png">
+        </a-assets>
 
-        <a-plane 
-            id="brandLogo"
-            src="./blackcat_logo.png" 
-            material="shader: flat; transparent: true; side: double">
-        </a-plane>
+        <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
+        <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-    </a-marker>
+        <!-- Marcador Custom de Alto Contraste con Retención Inercial Ajustada -->
+        <a-marker 
+            type="pattern" 
+            url="./blackcat_marker.patt" 
+            id="marker"
+            smooth="true"
+            smoothCount="20"
+            smoothTolerance="0.08"
+            smoothThreshold="6"
+            minConfidence="0.1">
+            
+            <a-gltf-model 
+                id="activeModel"
+                src="#genericModel" 
+                hide-floor
+                animation-mixer>
+            </a-gltf-model>
 
-    <a-entity camera></a-entity>
-</a-scene>
+            <a-plane 
+                id="brandLogo"
+                src="#logoImg" 
+                material="shader: flat; transparent: true; side: double">
+            </a-plane>
+
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
 
     <script>
         const CONFIG = {
             modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
-            modelRotation: "0 0 0",        // Modelo 3D perpendicular estándar
-            logoPosition: "0 2.2 0",       // Posición Y arriba del mástil, Z centrado
-            logoRotation: "-90 0 0",       // Orientado plano hacia la vista cenital o 0 0 0
+            modelRotation: "0 0 0",        
+            logoPosition: "0 2.2 0",       
+            logoRotation: "0 0 0",        
             logoWidth: 3.2,                
             logoHeight: 1.6                
         };
@@ -246,7 +256,7 @@
                     bgMusic.play().then(() => {
                         audioUnlocked = true;
                         audioBtn.classList.add('active');
-                    }).catch(err => console.log("Esperando interacción..."));
+                    }).catch(err => console.log("Esperando toque..."));
                 }
             };
 
@@ -272,8 +282,7 @@
 
             if (brandLogo) {
                 brandLogo.setAttribute('position', CONFIG.logoPosition);
-                // Si la vista es de arriba, rotamos a 0 0 0 para alinearlo directo con los ojos
-                brandLogo.setAttribute('rotation', "0 0 0");
+                brandLogo.setAttribute('rotation', CONFIG.logoRotation);
                 brandLogo.setAttribute('width', CONFIG.logoWidth);
                 brandLogo.setAttribute('height', CONFIG.logoHeight);
             }
