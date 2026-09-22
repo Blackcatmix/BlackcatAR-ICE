@@ -172,7 +172,7 @@
     <div id="ui-overlay">
         <div class="header-group">
             <div class="brand-header">BLACKCAT • BEBIDAS & COCKTAILS</div>
-            <div id="scanning-overlay">Apuntá al hielo...</div>
+            <div id="scanning-overlay">Enfoca el marcador...</div>
         </div>
 
         <div class="controls-container">
@@ -184,7 +184,7 @@
         </div>
     </div>
 
-    <!-- Escena configurada con Tolerancia y Filtros para Entornos con Líquidos/Vidrio -->
+    <!-- Escena AR.js con Binarización Dinámica y Cero Inercia Trabada -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.50; maxDetectionRate: 60;"
@@ -199,30 +199,31 @@
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- Marcador Custom de Alto Contraste con Retención Inercial Ajustada -->
-      <a-marker 
-    type="pattern" 
-    url="./blackcat_marker.patt" 
-    id="marker"
-    smooth="true"
-    smoothCount="15"
-    smoothTolerance="0.05"
-    smoothThreshold="5">
-    
-    <a-gltf-model 
-        id="activeModel"
-        src="#genericModel" 
-        hide-floor
-        animation-mixer>
-    </a-gltf-model>
+        <!-- Marcador Custom con SmoothCount REDUCIDO a 5 para reconexión ultra instantánea -->
+        <a-marker 
+            type="pattern" 
+            url="./blackcat_marker.patt" 
+            id="marker"
+            smooth="true"
+            smoothCount="5"
+            smoothTolerance="0.1"
+            smoothThreshold="2"
+            minConfidence="0.05">
+            
+            <a-gltf-model 
+                id="activeModel"
+                src="#genericModel" 
+                hide-floor
+                animation-mixer>
+            </a-gltf-model>
 
-    <a-plane 
-        id="brandLogo"
-        src="#logoImg" 
-        material="shader: flat; transparent: true; side: double">
-    </a-plane>
+            <a-plane 
+                id="brandLogo"
+                src="#logoImg" 
+                material="shader: flat; transparent: true; side: double">
+            </a-plane>
 
-</a-marker>
+        </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
@@ -231,9 +232,9 @@
         const CONFIG = {
             modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
-            modelRotation: "0 0 0",        
+            modelRotation: "-35 0 0",      
             logoPosition: "0 2.2 0",       
-            logoRotation: "0 0 0",        
+            logoRotation: "-35 0 0",       
             logoWidth: 3.2,                
             logoHeight: 1.6                
         };
@@ -291,8 +292,18 @@
                 unlockAudio();
             });
 
+            // ⚡ FIX UX CRÍTICO: RE-SCANNING FORZADO AL PERDER EL MARCADOR
             marker.addEventListener("markerLost", () => {
                 scanOverlay.style.opacity = '1';
+
+                // Forzar al engine de ARToolKit a resetear la matriz de detección local
+                if (sceneEl.systems && sceneEl.systems.arjs) {
+                    const arContext = sceneEl.systems.arjs.arToolkitContext;
+                    if (arContext && arContext._arEventListener) {
+                        // Resetea el umbral adaptativo en el WebAssembly
+                        arContext._updatedIt = false;
+                    }
+                }
             });
 
             captureBtn.addEventListener('click', () => {
