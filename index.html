@@ -136,10 +136,11 @@
         }
 
         .btn-audio svg { width: 24px; height: 24px; fill: #ffffff; }
-        .btn-audio .icon-muted { display: block; }
-        .btn-audio .icon-playing { display: none; }
-        .btn-audio.active .icon-muted { display: none; }
-        .btn-audio.active .icon-playing { display: block; }
+        /* Mostrar por defecto el icono de reproduciendo (Música ACTIVADA) */
+        .btn-audio .icon-muted { display: none; }
+        .btn-audio .icon-playing { display: block; }
+        .btn-audio.muted .icon-muted { display: block; }
+        .btn-audio.muted .icon-playing { display: none; }
     </style>
 
     <script>
@@ -184,7 +185,6 @@
         </div>
     </div>
 
-    <!-- Escena AR.js con Binarización Dinámica y Cero Inercia Trabada -->
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.50; maxDetectionRate: 60;"
@@ -199,7 +199,6 @@
         <a-light type="ambient" color="#ffffff" intensity="2.0"></a-light>
         <a-light type="directional" color="#ffaa00" intensity="2.5" position="2 4 2"></a-light>
 
-        <!-- Marcador Custom con SmoothCount REDUCIDO a 5 para reconexión ultra instantánea -->
         <a-marker 
             type="pattern" 
             url="./blackcat_marker.patt" 
@@ -229,14 +228,15 @@
     </a-scene>
 
     <script>
+        // 🎛️ CONFIGURACIÓN DE PARÁMETROS Y POSICIONAMIENTO
         const CONFIG = {
             modelScale: "0.0035 0.0035 0.0035", 
             modelPosition: "0 0 0",        
             modelRotation: "-35 0 0",      
-            logoPosition: "0 2.2 0",       
-            logoRotation: "-35 0 0",       
-            logoWidth: 3.2,                
-            logoHeight: 1.6                
+            logoPosition: "0 3.0 0.3",     // Parámetro restaurado a posición sobre la bandera
+            logoRotation: "-35 0 0",       // Ángulo coordinado de inclinación
+            logoWidth: 3.5,                
+            logoHeight: 1.75                
         };
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -249,28 +249,31 @@
             const captureBtn = document.getElementById('capture-btn');
             const sceneEl = document.querySelector('a-scene');
 
-            let audioUnlocked = false;
+            let isAudioPlaying = true;
 
-            const unlockAudio = () => {
-                if (!audioUnlocked && bgMusic) {
+            // Intentar reproducir audio inmediatamente al primer toque en la pantalla
+            const startAudio = () => {
+                if (bgMusic && bgMusic.paused && isAudioPlaying) {
                     bgMusic.play().then(() => {
-                        audioUnlocked = true;
-                        audioBtn.classList.add('active');
-                    }).catch(err => console.log("Esperando toque..."));
+                        audioBtn.classList.remove('muted');
+                    }).catch(err => console.log("Bloqueo de reproducción automática superado en primer tap"));
                 }
             };
 
-            window.addEventListener('click', unlockAudio, { once: true });
-            window.addEventListener('touchstart', unlockAudio, { once: true });
+            window.addEventListener('click', startAudio, { once: true });
+            window.addEventListener('touchstart', startAudio, { once: true });
 
+            // Botón de encendido / silenciado manual
             audioBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (bgMusic.paused) {
                     bgMusic.play();
-                    audioBtn.classList.add('active');
+                    isAudioPlaying = true;
+                    audioBtn.classList.remove('muted');
                 } else {
                     bgMusic.pause();
-                    audioBtn.classList.remove('active');
+                    isAudioPlaying = false;
+                    audioBtn.classList.add('muted');
                 }
             });
 
@@ -289,18 +292,14 @@
 
             marker.addEventListener("markerFound", () => {
                 scanOverlay.style.opacity = '0';
-                unlockAudio();
+                startAudio();
             });
 
-            // ⚡ FIX UX CRÍTICO: RE-SCANNING FORZADO AL PERDER EL MARCADOR
             marker.addEventListener("markerLost", () => {
                 scanOverlay.style.opacity = '1';
-
-                // Forzar al engine de ARToolKit a resetear la matriz de detección local
                 if (sceneEl.systems && sceneEl.systems.arjs) {
                     const arContext = sceneEl.systems.arjs.arToolkitContext;
-                    if (arContext && arContext._arEventListener) {
-                        // Resetea el umbral adaptativo en el WebAssembly
+                    if (arContext) {
                         arContext._updatedIt = false;
                     }
                 }
