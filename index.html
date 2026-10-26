@@ -197,7 +197,7 @@
     <script>
         // 🎛️ CONFIGURACIÓN DE TAMAÑO Y POSICIÓN CENTRAL
         const CONFIG = {
-            logoPosition: "0 2.0 0",       // Centrado en X y Z, a 1.5 de altura
+            logoPosition: "0 2.0 0",       // Centrado en X y Z, a 2 de altura
             logoRotation: "-100 0 0",       // Inclinación hacia la cámara para vista desde arriba
             logoWidth: 10,                // Ancho del cartel
             logoHeight: 5               // Alto del cartel
@@ -304,7 +304,7 @@
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
                 ctx.fillText('EXPERIENCIA WEBAR EN BARRA', w / 2, h - 35);
 
-                const link = document.createElement('a');
+                const link = document.createElement('a');2.0
                 link.download = `Blackcat_AR_${Date.now()}.png`;
                 link.href = mergedCanvas.toDataURL('image/png');
                 link.click();
